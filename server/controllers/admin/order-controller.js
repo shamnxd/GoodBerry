@@ -107,11 +107,11 @@ const orderController = {
         const variant = await Variant.findOne({ productId: productId, title: order.items[itemIndex].flavor });
         if (variant) {
           const packSize = order.items[itemIndex].packageSize;
-          const packSizeIndex = variant.packSizePricing.findIndex(
+          const packSizeIndex = variant.packSizes.findIndex(
             (p) => p.size === packSize
           );
           if (packSizeIndex !== -1) {
-            variant.packSizePricing[packSizeIndex].quantity += order.items[itemIndex].quantity;
+            variant.packSizes[packSizeIndex].quantity += order.items[itemIndex].quantity;
             await variant.save();
           }
         }
@@ -256,11 +256,11 @@ const orderController = {
       const variant = await Variant.findOne({ productId: productId, title: item.flavor });
       if (variant) {
         const packSize = item.packageSize;
-        const packSizeIndex = variant.packSizePricing.findIndex(
+        const packSizeIndex = variant.packSizes.findIndex(
           (p) => p.size === packSize
         );
         if (packSizeIndex !== -1) {
-          variant.packSizePricing[packSizeIndex].quantity += item.quantity;
+          variant.packSizes[packSizeIndex].quantity += item.quantity;
           await variant.save();
         }
       }

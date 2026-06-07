@@ -19,7 +19,7 @@ exports.getWishlist = async (req, res) => {
             .filter(item => item.productId && !item.productId.unListed && item.variantId && item.variantId.isListed) 
             .map(item => {
                 const variant = item.variantId;
-                const firstPackSize = variant.packSizePricing && variant.packSizePricing.length > 0 ? variant.packSizePricing[0] : null;
+                const firstPackSize = variant.packSizes && variant.packSizes.length > 0 ? variant.packSizes[0] : null;
                 
                 if (!firstPackSize) return null;
 

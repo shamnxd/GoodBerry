@@ -33,14 +33,15 @@ const getProductDetails = async (req, res) => {
     const variants = await Variant.find({ productId: id, isListed: true });
 
     const variantsFormatted = variants.reduce((acc, variant) => {
+      const pSizes = variant.packSizes || [];
       acc[variant.title.toLowerCase().replace(/\s+/g, '')] = {
         _id: variant._id,
         title: variant.title,
         description: variant.description,
         images: variant.images,
-        packageSizes: variant.selectedPackSizes,
-        packSizePricing: variant.packSizePricing,
-        stock: variant.availableQuantity
+        packageSizes: pSizes.map(p => p.size),
+        packSizes: pSizes,
+        stock: pSizes.reduce((sum, p) => sum + (p.quantity || 0), 0)
       };
       return acc;
     }, {});
@@ -76,8 +77,8 @@ const getProductDetails = async (req, res) => {
           _id: 1,
           name: 1,
           description: 1,
-          'firstVariant.salePrice': { $arrayElemAt: ['$firstVariant.packSizePricing.salePrice', 0] },
-          'firstVariant.price': { $arrayElemAt: ['$firstVariant.packSizePricing.price', 0] },
+          'firstVariant.salePrice': { $arrayElemAt: ['$firstVariant.packSizes.salePrice', 0] },
+          'firstVariant.price': { $arrayElemAt: ['$firstVariant.packSizes.price', 0] },
           'firstVariant.images': { $arrayElemAt: ['$firstVariant.images', 0] },
         },
       },
@@ -184,7 +185,7 @@ const getAllProducts = async (req, res) => {
             ...(statusArray.includes('In stock') ? [
               {
                 $match: {
-                  "packSizePricing.quantity": { $gt: 0 }
+                  "packSizes.quantity": { $gt: 0 }
                 }
               }
             ] : []),
@@ -196,7 +197,7 @@ const getAllProducts = async (req, res) => {
                       {
                         $size: {
                           $filter: {
-                            input: "$packSizePricing",
+                            input: "$packSizes",
                             as: "p",
                             cond: { $lt: ["$$p.salePrice", "$$p.price"] }
                           }
@@ -247,8 +248,8 @@ const getAllProducts = async (req, res) => {
       {
         $match: {
           $and: [
-            { "firstVariant.packSizePricing.salePrice": { $gte: parseFloat(minPrice) } },
-            { "firstVariant.packSizePricing.salePrice": { $lte: parseFloat(maxPrice) } }
+            { "firstVariant.packSizes.salePrice": { $gte: parseFloat(minPrice) } },
+            { "firstVariant.packSizes.salePrice": { $lte: parseFloat(maxPrice) } }
           ]
         }
       },
@@ -259,10 +260,10 @@ const getAllProducts = async (req, res) => {
           description: 1,
           categoryName: 1,
           "firstVariant.title": 1,
-          "firstVariant.salePrice": { $arrayElemAt: ["$firstVariant.packSizePricing.salePrice", 0] },
-          "firstVariant.price": { $arrayElemAt: ["$firstVariant.packSizePricing.price", 0] },
+          "firstVariant.salePrice": { $arrayElemAt: ["$firstVariant.packSizes.salePrice", 0] },
+          "firstVariant.price": { $arrayElemAt: ["$firstVariant.packSizes.price", 0] },
           "firstVariant.images": { $arrayElemAt: ["$firstVariant.images", 0] },
-          "firstVariant.packSizePricing.quantity": 1,
+          "firstVariant.packSizes.quantity": 1,
           isNew: 1,
           featured: 1,
           createdAt: 1,
@@ -312,7 +313,7 @@ const getAllProducts = async (req, res) => {
             ...(statusArray.includes('In stock') ? [
               {
                 $match: {
-                  "packSizePricing.quantity": { $gt: 0 }
+                  "packSizes.quantity": { $gt: 0 }
                 }
               }
             ] : []),
@@ -324,7 +325,7 @@ const getAllProducts = async (req, res) => {
                       {
                         $size: {
                           $filter: {
-                            input: "$packSizePricing",
+                            input: "$packSizes",
                             as: "p",
                             cond: { $lt: ["$$p.salePrice", "$$p.price"] }
                           }
@@ -353,8 +354,8 @@ const getAllProducts = async (req, res) => {
       {
         $match: {
           $and: [
-            { "firstVariant.packSizePricing.salePrice": { $gte: parseFloat(minPrice) } },
-            { "firstVariant.packSizePricing.salePrice": { $lte: parseFloat(maxPrice) } }
+            { "firstVariant.packSizes.salePrice": { $gte: parseFloat(minPrice) } },
+            { "firstVariant.packSizes.salePrice": { $lte: parseFloat(maxPrice) } }
           ]
         }
       },

@@ -33,8 +33,7 @@ const addProduct = async (req, res) => {
           title: variant.title,
           description: variant.description,
           images: variant.images,
-          selectedPackSizes: variant.selectedPackSizes,
-          packSizePricing: variant.packSizePricing
+          packSizes: variant.packSizes
         });
 
         return await newVariant.save();
@@ -79,14 +78,17 @@ const getAllProducts = async (req, res) => {
         const activeVariants = allVariants.filter(v => v.isListed);
 
         const totalStock = allVariants.reduce((acc, variant) => 
-          acc + variant.packSizePricing.reduce((sum, pack) => sum + (pack.quantity || 0), 0), 0);
+          acc + (variant.packSizes || []).reduce((sum, pack) => sum + (pack.quantity || 0), 0), 0);
+
+        const defaultVariant = activeVariants[0] || allVariants[0];
+        const defaultPrice = defaultVariant?.packSizes?.[0]?.price || 0;
 
         return {
           ...product._doc,
           category: category ? { name: category.name, status: category.status } : { name: "Unknown", status: "Unknown" },
           variants: allVariants,
-          image: (activeVariants[0] || allVariants[0])?.images[0] || '',
-          price: (activeVariants[0] || allVariants[0])?.packSizePricing[0]?.price || 0,
+          image: defaultVariant?.images?.[0] || '',
+          price: defaultPrice,
           totalStock,
           variantCount: allVariants.length,
           activeVariantCount: activeVariants.length,
@@ -193,18 +195,16 @@ const updateProduct = async (req, res) => {
       variants.map(async (variant) => {
         if (variant._id && mongoose.Types.ObjectId.isValid(variant._id)) {
           // Update existing variant
-          return await Variant.findByIdAndUpdate(
-            variant._id,
-            {
-              title: variant.title,
-              description: variant.description,
-              images: variant.images,
-              selectedPackSizes: variant.selectedPackSizes,
-              packSizePricing: variant.packSizePricing,
-              isListed: variant.isListed !== false // Use the value from frontend, default to true
-            },
-            { new: true, runValidators: true }
-          );
+          const existingVariant = await Variant.findById(variant._id);
+          if (existingVariant) {
+            existingVariant.title = variant.title;
+            existingVariant.description = variant.description;
+            existingVariant.images = variant.images;
+            existingVariant.packSizes = variant.packSizes;
+            existingVariant.isListed = variant.isListed !== false;
+            return await existingVariant.save();
+          }
+          return null;
         } else {
           // Create new variant
           const newVariant = new Variant({
@@ -212,8 +212,7 @@ const updateProduct = async (req, res) => {
             title: variant.title,
             description: variant.description,
             images: variant.images,
-            selectedPackSizes: variant.selectedPackSizes,
-            packSizePricing: variant.packSizePricing,
+            packSizes: variant.packSizes,
           });
           return await newVariant.save();
         }
@@ -227,7 +226,7 @@ const updateProduct = async (req, res) => {
         if (item.productId.toString() === id) {
           const variant = updatedVariants.find(v => v.title === item.flavor);
           if (variant) {
-            const pack = variant.packSizePricing.find(p => p.size === item.packageSize);
+            const pack = (variant.packSizes || []).find(p => p.size === item.packageSize);
             if (pack) {
               item.price = pack.price;
               item.salePrice = pack.salePrice;

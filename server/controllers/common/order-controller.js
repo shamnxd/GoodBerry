@@ -49,7 +49,7 @@ const orderController = {
           });
         }
 
-        const packSize = variant.packSizePricing.find(
+        const packSize = variant.packSizes.find(
           pack => pack.size === cartItem.packageSize
         );
 
@@ -215,7 +215,7 @@ const orderController = {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ message: MESSAGES.PRODUCT_VARIANT_NOT_FOUND });
         }
 
-        const packSize = variant.packSizePricing.find(pack => pack.size === item.packageSize);
+        const packSize = variant.packSizes.find(pack => pack.size === item.packageSize);
         if (packSize) {
             packSize.quantity += item.quantity;
             await variant.save();

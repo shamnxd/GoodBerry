@@ -52,7 +52,7 @@ const cartController = {
         });
       }
 
-      const packSize = variant.packSizePricing.find(
+      const packSize = variant.packSizes.find(
         pack => pack.size === packageSize
       );
         
@@ -173,7 +173,7 @@ const cartController = {
       // Stock check
       const variant = await Variant.findOne({ productId: itemId, title: flavor, isListed: true });
       if (variant) {
-        const packSize = variant.packSizePricing.find(p => p.size === packageSize);
+        const packSize = variant.packSizes.find(p => p.size === packageSize);
         if (packSize && quantity > packSize.quantity) {
           return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
             error: `Only ${packSize.quantity} units available in stock.` 
@@ -264,7 +264,7 @@ const cartController = {
           const variant = await Variant.findOne({ productId: pId, title: fTitle, isListed: true });
           if (!variant) return { productId: pId, packageSize: pSize, flavor: fTitle, error: MESSAGES.VARIANT_NOT_FOUND };
 
-          const packSize = variant.packSizePricing.find(pack => pack.size === pSize);
+          const packSize = variant.packSizes.find(pack => pack.size === pSize);
           if (!packSize) return { productId: pId, packageSize: pSize, flavor: fTitle, error: MESSAGES.PACKAGE_SIZE_NOT_FOUND };
 
           let currentCartQuantity = 0;

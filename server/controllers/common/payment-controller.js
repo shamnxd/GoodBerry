@@ -76,7 +76,7 @@ const paymentController = {
         item.status = 'processing';
         const variant = await Variant.findOne({ productId: item.productId, title: item.flavor });
         if (variant) {
-          const packSize = variant.packSizePricing.find(pack => pack.size === item.packageSize);
+          const packSize = variant.packSizes.find(pack => pack.size === item.packageSize);
           if (packSize) {
             packSize.quantity -= item.quantity;
             await variant.save();

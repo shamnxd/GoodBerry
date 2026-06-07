@@ -28,7 +28,7 @@ const addCategoryOffer = async (req, res) => {
         const categoryOffer = category.offerPercentage || 0;
         const bestOffer = Math.max(productOffer, categoryOffer);
 
-        variant.packSizePricing = variant.packSizePricing.map(pack => {
+        variant.packSizes = variant.packSizes.map(pack => {
           const discount = (pack.price * bestOffer) / 100;
           pack.salePrice = pack.price - discount;
           return pack;
@@ -58,7 +58,7 @@ const addCategoryOffer = async (req, res) => {
         const productVariants = variantsByProduct[item.productId.toString()] || [];
         const variant = productVariants.find(v => v.title === item.flavor);
         if (variant) {
-          const pack = variant.packSizePricing.find(p => p.size === item.packageSize);
+          const pack = variant.packSizes.find(p => p.size === item.packageSize);
           if (pack && (item.salePrice !== pack.salePrice || item.price !== pack.price)) {
             item.price = pack.price;
             item.salePrice = pack.salePrice;
@@ -102,7 +102,7 @@ const removeCategoryOffer = async (req, res) => {
         const categoryOffer = category.offerPercentage || 0;
         const bestOffer = Math.max(productOffer, categoryOffer);
 
-        variant.packSizePricing = variant.packSizePricing.map(pack => {
+        variant.packSizes = variant.packSizes.map(pack => {
           const discount = (pack.price * bestOffer) / 100;
           pack.salePrice = pack.price - discount;
           return pack;
@@ -130,7 +130,7 @@ const removeCategoryOffer = async (req, res) => {
         const productVariants = variantsByProduct[item.productId.toString()] || [];
         const variant = productVariants.find(v => v.title === item.flavor);
         if (variant) {
-          const pack = variant.packSizePricing.find(p => p.size === item.packageSize);
+          const pack = variant.packSizes.find(p => p.size === item.packageSize);
           if (pack && (item.salePrice !== pack.salePrice || item.price !== pack.price)) {
             item.price = pack.price;
             item.salePrice = pack.salePrice;
@@ -172,7 +172,7 @@ const addProductOffer = async (req, res) => {
       const categoryOffer = product.category.offerPercentage || 0;
       const bestOffer = Math.max(productOffer, categoryOffer);
 
-      variant.packSizePricing = variant.packSizePricing.map(pack => {
+      variant.packSizes = variant.packSizes.map(pack => {
         const discount = (pack.price * bestOffer) / 100;
         pack.salePrice = pack.price - discount;
         return pack;
@@ -188,7 +188,7 @@ const addProductOffer = async (req, res) => {
         if (item.productId.toString() === id) {
           const variant = variants.find(v => v.title === item.flavor);
           if (variant) {
-            const pack = variant.packSizePricing.find(p => p.size === item.packageSize);
+            const pack = variant.packSizes.find(p => p.size === item.packageSize);
             if (pack) {
               item.price = pack.price;
               item.salePrice = pack.salePrice;
@@ -227,7 +227,7 @@ const removeProductOffer = async (req, res) => {
       const categoryOffer = product.category.offerPercentage || 0;
       const bestOffer = Math.max(productOffer, categoryOffer);
 
-      variant.packSizePricing = variant.packSizePricing.map(pack => {
+      variant.packSizes = variant.packSizes.map(pack => {
         const discount = (pack.price * bestOffer) / 100;
         pack.salePrice = pack.price - discount;
         return pack;
@@ -243,7 +243,7 @@ const removeProductOffer = async (req, res) => {
         if (item.productId.toString() === id) {
           const variant = variants.find(v => v.title === item.flavor);
           if (variant) {
-            const pack = variant.packSizePricing.find(p => p.size === item.packageSize);
+            const pack = variant.packSizes.find(p => p.size === item.packageSize);
             if (pack) {
               item.price = pack.price;
               item.salePrice = pack.salePrice;
