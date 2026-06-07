@@ -82,10 +82,10 @@ export default function ProductPage() {
   };
 
   const calculateStockStatus = (flavor, packageSize) => {
-    if (!flavor || !flavor.packSizePricing) {
+    if (!flavor || !flavor.packSizes) {
       return { status: "OUT STOCK", color: "text-red-600 border-red-600" };
     }
-    const pack = flavor.packSizePricing.find((p) => p.size === packageSize);
+    const pack = flavor.packSizes.find((p) => p.size === packageSize);
     if (pack && pack.quantity > 0) {
       if (pack.quantity < 20) {
         return {
@@ -106,13 +106,13 @@ export default function ProductPage() {
       
       const currentSize = packageSize && currentFlavor.packageSizes.includes(packageSize) 
         ? packageSize 
-        : (currentFlavor.packSizePricing.find(p => p.quantity > 0)?.size || currentFlavor.packageSizes[0]);
+        : (currentFlavor.packSizes.find(p => p.quantity > 0)?.size || currentFlavor.packageSizes[0]);
 
       if (selectedFlavor !== currentFlavorKey) setSelectedFlavor(currentFlavorKey);
       if (packageSize !== currentSize) setPackageSize(currentSize);
       if (!selectedImage) setSelectedImage(currentFlavor.images[0]);
 
-      const pricing = currentFlavor.packSizePricing.find(p => p.size === currentSize);
+      const pricing = currentFlavor.packSizes.find(p => p.size === currentSize);
       setCurrentPrice({
         price: pricing?.price || 0,
         salePrice: pricing?.salePrice || 0,
@@ -154,12 +154,12 @@ export default function ProductPage() {
     setSelectedImage(flavors[value]?.images[0]);
     
     // Find first available size for this new flavor, or fallback to first size
-    const availablePack = flavors[value]?.packSizePricing.find(p => p.quantity > 0);
+    const availablePack = flavors[value]?.packSizes.find(p => p.quantity > 0);
     const newPackageSize = availablePack ? availablePack.size : flavors[value]?.packageSizes[0];
     
     setPackageSize(newPackageSize);
 
-    const newPricing = flavors[value]?.packSizePricing.find(
+    const newPricing = flavors[value]?.packSizes.find(
       (p) => p.size === newPackageSize
     );
     setCurrentPrice({
@@ -170,7 +170,7 @@ export default function ProductPage() {
 
   const handlePackageSizeChange = (size) => {
     setPackageSize(size);
-    const newPricing = flavor?.packSizePricing.find((p) => p.size === size);
+    const newPricing = flavor?.packSizes.find((p) => p.size === size);
     setCurrentPrice({
       price: newPricing?.price || 0,
       salePrice: newPricing?.salePrice || 0,
@@ -536,7 +536,7 @@ export default function ProductPage() {
               <div className="flex flex-wrap gap-3">
                 {flavor &&
                   flavor.packageSizes.map((size) => {
-                    const pricing = flavor.packSizePricing.find((p) => p.size === size);
+                    const pricing = flavor.packSizes.find((p) => p.size === size);
                     const isOutOfStock = !pricing || pricing.quantity <= 0;
 
                     return (

@@ -76,9 +76,19 @@ export default function ProductForm() {
               cloudinaryUrl: url,
               uploading: false,
             })),
-            selectedPackSizes: variant.selectedPackSizes,
-            packSizePricing: variant.packSizePricing || [],
+            packSizes: variant.packSizes || [],
           }));
+
+          // Dynamically gather all unique pack sizes from the variants
+          const uniqueSizes = new Set(["300ml", "500ml", "850ml"]);
+          variants.forEach((v) => {
+            if (v.packSizes) {
+              v.packSizes.forEach((p) => {
+                if (p.size) uniqueSizes.add(p.size);
+              });
+            }
+          });
+          setPackSizes(Array.from(uniqueSizes));
 
           setVariants(transformedVariants);
         }
@@ -101,8 +111,7 @@ export default function ProductForm() {
         description: "",
         isListed: true,
         images: [],
-        selectedPackSizes: [],
-        packSizePricing: [],
+        packSizes: [],
       },
     ]);
   };
@@ -120,14 +129,14 @@ export default function ProductForm() {
       const updatedVariants = [...prev];
       const variant = updatedVariants[variantIndex];
   
-      const existingPriceIndex = variant.packSizePricing.findIndex(
+      const existingPriceIndex = variant.packSizes.findIndex(
         (p) => p.size === packSize
       );
   
       if (existingPriceIndex >= 0) {
-        variant.packSizePricing[existingPriceIndex][field] = value;
+        variant.packSizes[existingPriceIndex][field] = value;
       } else {
-        variant.packSizePricing.push({
+        variant.packSizes.push({
           size: packSize,
           [field]: value,
           price: field === "price" ? value : "",
@@ -147,18 +156,18 @@ export default function ProductForm() {
   const handleTogglePackSize = (variantIndex, size) => {
     setVariants((prev) => {
       const updatedVariants = [...prev];
-      const currentSizes =
-        updatedVariants[variantIndex].selectedPackSizes || [];
-      const isSelected = currentSizes.includes(size);
-
-      updatedVariants[variantIndex].selectedPackSizes = isSelected
-        ? currentSizes.filter((s) => s !== size)
-        : [...currentSizes, size];
+      const variant = updatedVariants[variantIndex];
+      const isSelected = variant.packSizes.some((p) => p.size === size);
 
       if (isSelected) {
-        updatedVariants[variantIndex].packSizePricing = updatedVariants[
-          variantIndex
-        ].packSizePricing.filter((p) => p.size !== size);
+        variant.packSizes = variant.packSizes.filter((p) => p.size !== size);
+      } else {
+        variant.packSizes.push({
+          size: size,
+          price: "",
+          salePrice: "",
+          quantity: "",
+        });
       }
 
       return updatedVariants;
@@ -272,7 +281,7 @@ export default function ProductForm() {
       if (
         !variant.title ||
         !variant.description ||
-        variant.selectedPackSizes.length === 0 ||
+        variant.packSizes.length === 0 ||
         variant.images.length === 0
       ) {
         toast({
@@ -283,18 +292,22 @@ export default function ProductForm() {
       }
 
       // Validate prices for each selected pack size
-      for (const size of variant.selectedPackSizes) {
-        const pricing = variant.packSizePricing.find((p) => p.size === size);
-        if (!pricing || !pricing.price || !pricing.quantity) {
+      for (const pack of variant.packSizes) {
+        if (
+          pack.price === "" ||
+          pack.price === undefined ||
+          pack.quantity === "" ||
+          pack.quantity === undefined
+        ) {
           toast({
-            title: `Please set price and quantity for ${size} in variant ${i + 1}`,
+            title: `Please set price and quantity for ${pack.size} in variant ${i + 1}`,
             variant: "destructive",
           });
           return;
         }
 
-        const price = parseFloat(pricing.price);
-        const quantity = parseInt(pricing.quantity);
+        const price = parseFloat(pack.price);
+        const quantity = parseInt(pack.quantity);
 
         if (quantity < 0) {
           toast({
@@ -331,8 +344,7 @@ export default function ProductForm() {
         images: variant.images
           .filter((img) => !img.uploading)
           .map((img) => img.cloudinaryUrl),
-        selectedPackSizes: variant.selectedPackSizes,
-        packSizePricing: variant.packSizePricing,
+        packSizes: variant.packSizes,
       })),
     };
 
@@ -362,12 +374,12 @@ export default function ProductForm() {
     }
   };
 
-  const renderPackSizePricing = (variant, variantIndex) => (
+  const renderPackSizes = (variant, variantIndex) => (
     <div className="mt-4">
       <Label>Pack Size Pricing and Quantity</Label>
       <div className="grid gap-4 mt-2">
-        {variant.selectedPackSizes.map((size) => {
-          const pricing = variant.packSizePricing.find((p) => p.size === size) || {};
+        {variant.packSizes.map((pack) => {
+          const size = pack.size;
           return (
             <div
               key={size}
@@ -377,7 +389,7 @@ export default function ProductForm() {
                 <Label>{size} - Regular Price</Label>
                 <Input
                   type="number"
-                  value={pricing.price || ""}
+                  value={pack.price || ""}
                   onChange={(e) =>
                     handleUpdatePackSizePrice(
                       variantIndex,
@@ -393,7 +405,7 @@ export default function ProductForm() {
                 <Label>{size} - Sale Price</Label>
                 <Input
                   type="number"
-                  value={pricing.salePrice || ""}
+                  value={pack.salePrice || ""}
                   onChange={(e) =>
                     handleUpdatePackSizePrice(
                       variantIndex,
@@ -411,7 +423,7 @@ export default function ProductForm() {
                 <Label>{size} - Quantity</Label>
                 <Input
                   type="number"
-                  value={pricing.quantity || ""}
+                  value={pack.quantity || ""}
                   onChange={(e) =>
                     handleUpdatePackSizePrice(
                       variantIndex,
@@ -556,8 +568,8 @@ export default function ProductForm() {
                               >
                                 <Checkbox
                                   id={`pack-size-${index}-${size}`}
-                                  checked={variant.selectedPackSizes?.includes(
-                                    size
+                                  checked={variant.packSizes?.some(
+                                    (p) => p.size === size
                                   )}
                                   onCheckedChange={() =>
                                     handleTogglePackSize(index, size)
@@ -587,7 +599,7 @@ export default function ProductForm() {
                         </div>
 
                         {/* Pack Size Pricing Section */}
-                        {renderPackSizePricing(variant, index)}
+                        {renderPackSizes(variant, index)}
 
                         <div>
                           <Label>Images (Max: 4)</Label>
