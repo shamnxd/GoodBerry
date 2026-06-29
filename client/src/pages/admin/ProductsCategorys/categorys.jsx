@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { getAllCategories } from "@/store/admin-slice";
 import { addCategoryOffer, removeCategoryOffer } from "@/store/admin-slice/offer-slice";
+import AdminTable from "@/components/admin/AdminTable";
 import { Switch } from "@/components/ui/switch";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,9 @@ function Categorys() {
   const [isRemoveOfferDialogOpen, setIsRemoveOfferDialogOpen] = useState(false);
   const [offerCategory, setOfferCategory] = useState(null);
   const [offerPercentage, setOfferPercentage] = useState('');
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const loadCategories = useCallback(
     (page = 1) => {
@@ -46,10 +50,12 @@ function Categorys() {
         getAllCategories({
           page,
           limit: itemsPerPage,
+          search: debouncedSearch,
+          status: statusFilter,
         })
       );
     },
-    [dispatch, itemsPerPage]
+    [dispatch, debouncedSearch, statusFilter, itemsPerPage]
   );
 
   const handlePageChange = (newPage) => {
@@ -57,8 +63,16 @@ function Categorys() {
   };
 
   useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
+  useEffect(() => {
     loadCategories(1);
-  }, [loadCategories]);
+  }, [debouncedSearch, statusFilter, loadCategories]);
 
   const handleEditClick = (category) => {
     setSelectedCategory(category);
@@ -109,112 +123,93 @@ function Categorys() {
   };
 
   return (
-    <div className="rounded-lg shadow-sm bg-white pb-4 lg:m-8 lg:mt-4 lg:ml-3">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Categories</h2>
-          <AddCategoryModal />
-        </div>
-      </div>
-      <div className="border rounded-lg mx-4 mb-4" style={{ height: "450px" }}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>S.No</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>List/Unlist</TableHead>
-              <TableHead>Offer</TableHead>
-              <TableHead className="text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {categories.map((category, index) => (
-              <TableRow key={category.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="h-12 w-12 rounded-lg border p-1"
-                    />
-                    <span>{category.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Switch checked={category.status === "Active"} />
-                </TableCell>
-                <TableCell>
+    <div className="lg:m-8 lg:mt-4 lg:ml-3">
+      <AdminTable
+        title="Categories"
+        searchPlaceholder="Search categories..."
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        filterValue={statusFilter}
+        onFilterChange={setStatusFilter}
+        filterOptions={[
+          { label: "All Statuses", value: "all" },
+          { label: "Active", value: "Active" },
+          { label: "Inactive", value: "Inactive" }
+        ]}
+        headers={[
+          { label: "No", className: "w-[80px] pl-6" },
+          { label: "Name" },
+          { label: "List/Unlist" },
+          { label: "Offer" },
+          { label: "Action", className: "text-right pr-6" }
+        ]}
+        data={categories}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
+        filterElement={<AddCategoryModal />}
+        renderRow={(category, index) => (
+          <TableRow key={category._id || category.id} className="h-16 border-b border-slate-100">
+            <TableCell className="py-3 px-4 pl-6 font-medium text-slate-500">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+            <TableCell className="py-3 px-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="h-12 w-12 rounded-lg border p-1"
+                />
+                <span className="font-semibold text-slate-800">{category.name}</span>
+              </div>
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              <Switch checked={category.status === "Active"} />
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              {category.offerPercentage > 0 ? (
+                <Badge className="bg-green-100 text-green-800 hover:bg-green-200">{category.offerPercentage}%</Badge>
+              ) : (
+                <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">No Offer</Badge>
+              )}
+            </TableCell>
+            <TableCell className="py-3 px-4 text-right pr-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleEditClick(category);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" /> Edit
+                  </DropdownMenuItem>
                   {category.offerPercentage > 0 ? (
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-200">{category.offerPercentage}%</Badge>
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => handleRemoveOffer(category)}
+                    >
+                      <Trash className="h-4 w-4 mr-2" /> Remove Offer
+                    </DropdownMenuItem>
                   ) : (
-                    <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">No Offer</Badge>
+                    <DropdownMenuItem
+                      className="text-green-600"
+                      onClick={() => handleAddOffer(category)}
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2"/> Add Offer
+                    </DropdownMenuItem>
                   )}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleEditClick(category);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      {category.offerPercentage > 0 ? (
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleRemoveOffer(category)}
-                        >
-                         <Trash className="h-4 w-4" /> Remove Offer
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          className="text-green-600"
-                          onClick={() => handleAddOffer(category)}
-                        >
-                          <PlusCircle className="h-4 w-4"/> Add Offer
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-end mt-5 mr-4 gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-          <span className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        )}
+      />
 
       {isEditModalOpen && (
         <EditCategoryModal

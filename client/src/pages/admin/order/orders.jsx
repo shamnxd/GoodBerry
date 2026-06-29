@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllOrders } from '@/store/admin-slice/order-slice';
+import AdminTable from '@/components/admin/AdminTable';
 
 function AdminOrders() {
   const navigate = useNavigate();
@@ -73,128 +74,72 @@ function AdminOrders() {
   }
 
   return (
-    <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              ref={searchInputRef}
-              placeholder="Search by Order ID or Customer Name"
-              value={searchInput}
-              onChange={handleSearch}
-              className="pl-10"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Filter by Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="shipped">Shipped</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="returned">Returned</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer Name</TableHead>
-                <TableHead>Order Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total Amount</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            {
-              isLoading ? (
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center align-middle">
-                      <div className="flex justify-center items-center space-x-2 h-[100px]">
-                        <Loader className="h-4 w-4 animate-spin" />
-                        <span>Loading...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              ) : (
-                <TableBody>
-                  {orders.map(order => (
-                    <TableRow key={order._id}>
-                      <TableCell className="font-medium">#{order.orderId}</TableCell>
-                      <TableCell>{order?.userId?.username || order?.addressId?.name}</TableCell>
-                      <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        {hasReturnRequest(order.items) && (
-                          <>
-                          <Badge className="bg-yellow-100 mb-1 text-yellow-800 hover:bg-yellow-200">
-                            Return rq
-                          </Badge>
-                          <br />
-                          </>
-                        )} 
-                        <Badge className={getStatusColor(order.status)}>
-                          {order.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>₹{order.total.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => navigate(`/admin/orders/${order.orderId}`)}
-                        >
-                          View Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              )
-            }
-            
-          </Table>
-        </CardContent>
-      </Card>
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2 mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-          <span className="text-sm font-medium">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+    <div className="p-4 space-y-8">
+      <AdminTable
+        title="Orders"
+        searchPlaceholder="Search by Order ID or Customer Name"
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        filterValue={statusFilter}
+        onFilterChange={handleStatusChange}
+        filterOptions={[
+          { label: "All Statuses", value: "all" },
+          { label: "Processing", value: "processing" },
+          { label: "Shipped", value: "shipped" },
+          { label: "Delivered", value: "delivered" },
+          { label: "Cancelled", value: "cancelled" },
+          { label: "Returned", value: "returned" },
+          { label: "Failed", value: "failed" }
+        ]}
+        headers={[
+          { label: "No", className: "w-[80px] pl-6" },
+          { label: "Order ID" },
+          { label: "Customer Name" },
+          { label: "Order Date" },
+          { label: "Status" },
+          { label: "Total Amount" },
+          { label: "Actions", className: "text-right pr-6" }
+        ]}
+        data={orders}
+        isLoading={isLoading}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
+        renderRow={(order, index) => (
+          <TableRow key={order._id} className="h-16 border-b border-slate-100">
+            <TableCell className="py-3 px-4 pl-6 font-medium text-slate-500">{(currentPage - 1) * 5 + index + 1}</TableCell>
+            <TableCell className="py-3 px-4 font-semibold text-slate-800">#{order.orderId}</TableCell>
+            <TableCell className="py-3 px-4 text-slate-700">{order?.userId?.username || order?.addressId?.name || "N/A"}</TableCell>
+            <TableCell className="py-3 px-4 text-slate-500">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+            <TableCell className="py-3 px-4">
+              {hasReturnRequest(order.items) && (
+                <>
+                  <Badge className="bg-yellow-100 mb-1 text-yellow-800 hover:bg-yellow-200">
+                    Return rq
+                  </Badge>
+                  <br />
+                </>
+              )} 
+              <Badge className={getStatusColor(order.status)}>
+                {order.status}
+              </Badge>
+            </TableCell>
+            <TableCell className="py-3 px-4 font-bold text-slate-800">₹{order.total.toFixed(2)}</TableCell>
+            <TableCell className="py-3 px-4 text-right pr-6">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate(`/admin/orders/${order.orderId}`)}
+                className="rounded-lg text-xs"
+              >
+                View Details
+              </Button>
+            </TableCell>
+          </TableRow>
+        )}
+      />
     </div>
   );
 }

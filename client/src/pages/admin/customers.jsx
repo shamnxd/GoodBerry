@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import MESSAGES from '../../constants/messages';
+import AdminTable from "@/components/admin/AdminTable";
 import {
-
   Table,
   TableBody,
   TableCell,
@@ -38,7 +38,8 @@ export default function CustomersPage() {
 
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [itemsPerPage] = useState(6);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [itemsPerPage] = useState(5);
   const [selectedUser, setSelectedUser] = useState(null);
 
   const loadUsers = useCallback(
@@ -48,10 +49,11 @@ export default function CustomersPage() {
           page,
           limit: itemsPerPage,
           search: debouncedSearch,
+          status: statusFilter,
         })
       );
     },
-    [dispatch, debouncedSearch, itemsPerPage]
+    [dispatch, debouncedSearch, statusFilter, itemsPerPage]
   );
 
   const handleSearch = (e) => {
@@ -68,7 +70,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadUsers(1);
-  }, [debouncedSearch, loadUsers]);
+  }, [debouncedSearch, statusFilter, loadUsers]);
 
   const handleBlockUnblock = async () => {
     if (selectedUser) {
@@ -91,138 +93,94 @@ export default function CustomersPage() {
     loadUsers(newPage);
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="p-2 md:p-4 space-y-4">
-      <div className="bg-white rounded-lg shadow-sm pb-5">
-        <div className="p-2 md:p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 space-y-2 sm:space-y-0">
-            <h2 className="text-xl font-semibold">Customers</h2>
-            <div className="relative w-full sm:w-64">
-              <Search
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={20}
-              />
-              <Input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search customers..."
-                value={searchInput}
-                onChange={handleSearch}
-                className="pl-8 pr-4 py-2 w-full"
-              />
-            </div>
-          </div>
-        </div>
-        <div
-          className="border rounded-lg mx-2 md:mx-4"
-          style={{ minHeight: "450px", height: "450px", overflowY: "auto" }}
-        >
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Join Date</TableHead>
-                  <TableHead>Orders</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((customer) => (
-                  <TableRow key={customer._id}>
-                    <TableCell className="font-medium">
-                      {customer.username}
-                    </TableCell>
-                    <TableCell>{customer.email}</TableCell>
-                    <TableCell>{customer.phone || "Not Added"}</TableCell>
-                    <TableCell>
-                      {new Date(customer.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                    <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          customer.orderCount
-                            ? "bg-green-50 text-green-700"
-                            : "bg-red-50 text-red-700"
-                        }`}
-                      >
-                        {customer.orderCount ? customer.orderCount : "0"}
-                      </span>
-                      </TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          customer.isBlocked
-                            ? "bg-red-50 text-red-700"
-                            : "bg-green-50 text-green-700"
-                        }`}
-                      >
-                        {customer.isBlocked ? "Blocked" : "Active"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setSelectedUser(customer)}
-                            className={
-                              customer.isBlocked
-                                ? "text-green-500"
-                                : "text-red-500"
-                            }
-                          >
-                            {customer.isBlocked ? "Unblock" : "Block"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-blue-600">
-                            View Details
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-end mt-5 mr-4 gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm font-medium">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+      <AdminTable
+        title="Customers"
+        searchPlaceholder="Search customers..."
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        filterValue={statusFilter}
+        onFilterChange={setStatusFilter}
+        filterOptions={[
+          { label: "All Statuses", value: "all" },
+          { label: "Active", value: "active" },
+          { label: "Blocked", value: "blocked" }
+        ]}
+        headers={[
+          { label: "No", className: "w-[80px] pl-6" },
+          { label: "Name" },
+          { label: "Email" },
+          { label: "Phone" },
+          { label: "Join Date" },
+          { label: "Orders" },
+          { label: "Status" },
+          { label: "Actions", className: "text-right pr-6" }
+        ]}
+        data={users}
+        isLoading={isLoading}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
+        renderRow={(customer, index) => (
+          <TableRow key={customer._id} className="h-16 border-b border-slate-100">
+            <TableCell className="py-3 px-4 pl-6 font-medium text-slate-500">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+            <TableCell className="py-3 px-4 font-semibold text-slate-800">
+              {customer.username}
+            </TableCell>
+            <TableCell className="py-3 px-4 text-slate-600">{customer.email}</TableCell>
+            <TableCell className="py-3 px-4 text-slate-500">{customer.phone || "Not Added"}</TableCell>
+            <TableCell className="py-3 px-4 text-slate-500">
+              {new Date(customer.createdAt).toLocaleDateString()}
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                  customer.orderCount
+                    ? "bg-green-50 text-green-700"
+                    : "bg-red-50 text-red-700"
+                }`}
+              >
+                {customer.orderCount ? customer.orderCount : "0"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                  customer.isBlocked
+                    ? "bg-red-50 text-red-700"
+                    : "bg-green-50 text-green-700"
+                }`}
+              >
+                {customer.isBlocked ? "Blocked" : "Active"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 px-4 text-right pr-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setSelectedUser(customer)}
+                    className={
+                      customer.isBlocked
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                  >
+                    {customer.isBlocked ? "Unblock" : "Block"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
         )}
-      </div>
+      />
 
       {selectedUser && (
         <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>

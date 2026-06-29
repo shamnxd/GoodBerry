@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import MESSAGES from '../../constants/messages';
 import {
-
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -22,21 +21,32 @@ import { fetchCoupons, addCoupon, updateCoupon, toggleCouponStatus } from "@/sto
 import { useToast } from "@/hooks/use-toast";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import PropTypes from "prop-types";
+import { TableRow, TableCell } from "@/components/ui/table";
+import AdminTable from "@/components/admin/AdminTable";
 
 export default function CouponManagement() {
   const dispatch = useDispatch();
-  const { coupons, totalPages, currentPage } = useSelector(state => state.coupons);
+  const { coupons, totalPages, currentPage, loading } = useSelector(state => state.coupons);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
 
   useEffect(() => {
-    dispatch(fetchCoupons({ page: 1, search, status: statusFilter }));
-  }, [dispatch, search, statusFilter]);
+    const delayDebounceFn = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
+  useEffect(() => {
+    dispatch(fetchCoupons({ page: 1, search: debouncedSearch, status: statusFilter, limit: 5 }));
+  }, [dispatch, debouncedSearch, statusFilter]);
 
   const handleAddCoupon = (newCoupon) => {
     dispatch(addCoupon(newCoupon))
@@ -110,158 +120,109 @@ export default function CouponManagement() {
       });
   };
 
-  if (!coupons?.length) return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">No Coupons Found</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEditingCoupon(null)}>
-              <Plus className="mr-2 h-4 w-4" /> Add Coupon
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Coupon</DialogTitle>
-            </DialogHeader>
-            <CouponForm onSubmit={handleAddCoupon} />
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Filters</h2>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input 
-              placeholder="Search by Coupon ID or Code" 
-              className="pl-10"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-            </SelectContent>
-          </Select>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingCoupon(null)}>
-                <Plus className="mr-2 h-4 w-4" /> Add Coupon
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>{editingCoupon ? "Edit Coupon" : "Add New Coupon"}</DialogTitle>
-              </DialogHeader>
-              <CouponForm 
-                onSubmit={editingCoupon ? handleEditCoupon : handleAddCoupon} 
-                initialData={editingCoupon}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+    <div className="p-4 space-y-8">
+      <AdminTable
+        title="Coupons"
+        searchPlaceholder="Search coupons by Code..."
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        filterValue={statusFilter}
+        onFilterChange={setStatusFilter}
+        filterOptions={[
+          { label: "All Statuses", value: "all" },
+          { label: "Active", value: "active" },
+          { label: "Inactive", value: "inactive" },
+          { label: "Expired", value: "expired" }
+        ]}
+        addButtonText="Add Coupon"
+        onAddClick={() => {
+          setEditingCoupon(null);
+          setIsDialogOpen(true);
+        }}
+        headers={[
+          { label: "No", className: "w-[80px] pl-6" },
+          { label: "Coupon Code" },
+          { label: "Valid Period" },
+          { label: "Discount" },
+          { label: "Usage" },
+          { label: "Status" },
+          { label: "Actions", className: "text-right pr-6" }
+        ]}
+        data={coupons || []}
+        isLoading={loading}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: (newPage) => {
+            dispatch(fetchCoupons({ page: newPage, search: debouncedSearch, status: statusFilter, limit: 5 }));
+          }
+        }}
+        renderRow={(coupon, index) => (
+          <TableRow key={coupon._id} className="h-16 border-b border-slate-100">
+            <TableCell className="py-3 px-4 pl-6 font-medium text-slate-500">{(currentPage - 1) * 5 + index + 1}</TableCell>
+            <TableCell className="py-3 px-4 font-bold text-slate-800">{coupon.code}</TableCell>
+            <TableCell className="py-3 px-4 text-slate-500">
+              {format(new Date(coupon.startDate), "LLL dd, y")} - {format(new Date(coupon.endDate), "LLL dd, y")}
+            </TableCell>
+            <TableCell className="py-3 px-4 font-semibold text-slate-700">₹{coupon.discount.toFixed(2)}</TableCell>
+            <TableCell className="py-3 px-4 text-slate-600">
+              {coupon.used} / {coupon.usageLimit}
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              <Badge 
+                variant={
+                  coupon.status === 'active' ? 'success' : 
+                  coupon.status === 'expired' ? 'destructive' : 'secondary'
+                }
+              >
+                {coupon.status}
+              </Badge>
+            </TableCell>
+            <TableCell className="py-3 px-4 text-right pr-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (coupon.status !== 'expired') {
+                        setEditingCoupon(coupon);
+                        setIsDialogOpen(true);
+                      }
+                    }}
+                    disabled={coupon.status === 'expired'}
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleToggleCouponStatus(coupon._id)}
+                    disabled={coupon.status === 'expired'}
+                    className={coupon.status === 'active' ? "text-red-600" : "text-green-600"}
+                  >
+                    {coupon.status === 'active' ? 'Deactivate' : 'Activate'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        )}
+      />
 
-      <div className="grid gap-4">
-        {coupons.map((coupon) => (
-          <div key={coupon._id} className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
-              <div className="md:col-span-2">
-                <div className="font-medium text-sm text-gray-500">Coupon Code</div>
-                <div className="font-medium">{coupon.code}</div>
-                <div className="mt-2">
-                  <div className="font-medium text-sm text-gray-500">Valid Period</div>
-                  <div className="text-sm">
-                    {format(new Date(coupon.startDate), "LLL dd, y")} - {format(new Date(coupon.endDate), "LLL dd, y")}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="font-medium text-sm text-gray-500">Discount</div>
-                <div>₹{coupon.discount.toFixed(2)}</div>
-              </div>
-              <div>
-                <div className="font-medium text-sm text-gray-500">Usage</div>
-                <div>{coupon.used} / {coupon.usageLimit}</div>
-              </div>
-              <div>
-                <div className="font-medium text-sm text-gray-500">Status</div>
-                <Badge 
-                  variant={
-                    coupon.status === 'active' ? 'success' : 
-                    coupon.status === 'expired' ? 'destructive' : 'secondary'
-                  }
-                  className="mt-1"
-                >
-                  {coupon.status}
-                </Badge>
-              </div>
-              <div className="flex justify-end">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        if (coupon.status !== 'expired') {
-                          setEditingCoupon(coupon);
-                          setIsDialogOpen(true);
-                        }
-                      }}
-                      disabled={coupon.status === 'expired'}
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleToggleCouponStatus(coupon._id)}
-                      disabled={coupon.status === 'expired'}
-                      className={coupon.status === 'active' ? "text-red-600" : "text-green-600"}
-                    >
-                      {coupon.status === 'active' ? 'Deactivate' : 'Activate'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {totalPages > 1 && <div className="mt-4 flex items-center justify-between max-w-[300px]">
-        <Button 
-          variant="outline" 
-          disabled={currentPage === 1}
-          onClick={() => dispatch(fetchCoupons({ page: currentPage - 1, search, status: statusFilter }))}
-        >
-          Previous
-        </Button>
-        <div className="text-sm text-gray-500">Page {currentPage} of {totalPages}</div>
-        <Button 
-          variant="outline" 
-          disabled={currentPage === totalPages}
-          onClick={() => dispatch(fetchCoupons({ page: currentPage + 1, search, status: statusFilter }))}
-        >
-          Next
-        </Button>
-      </div>}
-
-
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingCoupon ? "Edit Coupon" : "Add New Coupon"}</DialogTitle>
+          </DialogHeader>
+          <CouponForm 
+            onSubmit={editingCoupon ? handleEditCoupon : handleAddCoupon} 
+            initialData={editingCoupon}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

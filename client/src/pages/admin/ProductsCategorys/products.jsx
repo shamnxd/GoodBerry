@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import MESSAGES from '../../../constants/messages';
+import AdminTable from "@/components/admin/AdminTable";
 import {
-
   Table,
   TableBody,
   TableCell,
@@ -55,7 +55,8 @@ export default function ProductsPage() {
 
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [itemsPerPage] = useState(4);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [itemsPerPage] = useState(5);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [offerPercentage, setOfferPercentage] = useState(0);
   const [isOfferDialogOpen, setIsOfferDialogOpen] = useState(false);
@@ -68,10 +69,11 @@ export default function ProductsPage() {
           page,
           limit: itemsPerPage,
           search: debouncedSearch,
+          status: statusFilter,
         })
       );
     },
-    [dispatch, debouncedSearch, itemsPerPage]
+    [dispatch, debouncedSearch, statusFilter, itemsPerPage]
   );
 
   const handleSearch = (e) => {
@@ -88,7 +90,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     loadProducts(1);
-  }, [debouncedSearch, loadProducts]);
+  }, [debouncedSearch, statusFilter, loadProducts]);
 
   const handleUnlist = async () => {
     if (selectedProduct) {
@@ -164,198 +166,151 @@ export default function ProductsPage() {
     loadProducts(newPage);
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <div className="p-4 space-y-8">
-      <div className="bg-white rounded-lg shadow-sm pb-2">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Products</h2>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-                  size={20}
+      <AdminTable
+        title="Products"
+        searchPlaceholder="Search products..."
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        addButtonText="Add Product"
+        onAddClick={() => navigate("/admin/products/add")}
+        filterValue={statusFilter}
+        onFilterChange={setStatusFilter}
+        filterOptions={[
+          { label: "All Statuses", value: "all" },
+          { label: "Listed", value: "listed" },
+          { label: "Unlisted", value: "unlisted" }
+        ]}
+        headers={[
+          { label: "No", className: "w-[80px] pl-6" },
+          { label: "Name" },
+          { label: "Price" },
+          { label: "Variants" },
+          { label: "Stock" },
+          { label: "Categories" },
+          { label: "List/Unlist" },
+          { label: "Offer" },
+          { label: "Action", className: "text-right pr-6" }
+        ]}
+        data={products}
+        isLoading={isLoading}
+        pagination={{
+          currentPage,
+          totalPages,
+          onPageChange: handlePageChange
+        }}
+        renderRow={(product, index) => (
+          <TableRow key={product._id} className="h-16 border-b border-slate-100">
+            <TableCell className="py-3 px-4 pl-6 font-medium text-slate-500">{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+            <TableCell className="py-3 px-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={product.image || ""}
+                  alt={product.name || "Product Image"}
+                  className="h-12 w-12 rounded-lg border p-1"
                 />
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchInput}
-                  onChange={handleSearch}
-                  className="pl-8 pr-4 py-2 w-64"
-                />
+                <span className="font-semibold text-slate-800">{product.name || "N/A"}</span>
               </div>
-              <Button variant="outline" size="icon">
-                <Filter size={20} />
-              </Button>
-              <Button onClick={() => navigate("/admin/products/add")}>
-                Add Product
-              </Button>
-            </div>
-          </div>
-        </div>
-        <div
-          className="border rounded-lg mx-4 mb-4"
-          style={{ height: "400px", overflowY: "auto" }}
-        >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Variants</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Categories</TableHead>
-                <TableHead>List/Unlist</TableHead>
-                <TableHead>Offer</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product, index) => (
-                <TableRow key={product._id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={product.image || ""}
-                        alt={product.name || "Product Image"}
-                        className="h-12 w-12 rounded-lg border p-1"
-                      />
-                      <span>{product.name || "N/A"}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-5">
-                    ₹{product.price || 0}
-                  </TableCell>
-                  <TableCell className="px-5">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-green-600">{product.activeVariantCount || 0} Active</span>
-                      <span className="text-xs text-gray-500">{product.variantCount || 0} Total</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        product.totalStock < 1
-                          ? "bg-red-50 text-red-700"
-                          : "bg-green-50 text-green-700"
-                      }`}
+            </TableCell>
+            <TableCell className="py-3 px-4 font-semibold text-slate-700">
+              ₹{product.price || 0}
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              <div className="flex flex-col">
+                <span className="font-medium text-green-600">{product.activeVariantCount || 0} Active</span>
+                <span className="text-xs text-slate-400">{product.variantCount || 0} Total</span>
+              </div>
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  product.totalStock < 1
+                    ? "bg-red-50 text-red-700"
+                    : "bg-green-50 text-green-700"
+                }`}
+              >
+                {product.totalStock || 0}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 px-4 text-slate-600">
+              {product.category?.name || "N/A"}
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  product.unListed
+                    ? "bg-red-50 text-red-700"
+                    : "bg-green-50 text-green-700"
+                }`}
+              >
+                {product.unListed ? "Unlisted" : "Listed"}
+              </span>
+            </TableCell>
+            <TableCell className="py-3 px-4">
+              {product.offerPercentage > 0 ? (
+                <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                  {product.offerPercentage}%
+                </Badge>
+              ) : (
+                <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
+                  No Offer
+                </Badge>
+              )}
+            </TableCell>
+            <TableCell className="py-3 px-4 text-right pr-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      navigate(`/admin/products/edit/${product._id}`)
+                    }
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setIsUnlistDialogOpen(true);
+                    }}
+                    className={
+                      product.unListed ? "text-green-500" : "text-red-500"
+                    }
+                  >
+                    {product.unListed ? "List" : "Unlist"}
+                  </DropdownMenuItem>
+                  {product.offerPercentage > 0 ? (
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setIsOfferDialogOpen(true);
+                      }}
                     >
-                      {product.totalStock || 0}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-5">
-                    {product.category.name || "N/A"}
-                  </TableCell>
-                  <TableCell className="pl-4">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        product.unListed
-                          ? "bg-red-50 text-red-700"
-                          : "bg-green-50 text-green-700"
-                      }`}
+                      Remove Offer
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      className="text-green-600"
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setIsOfferDialogOpen(true);
+                      }}
                     >
-                      {product.unListed ? "Unlisted" : "Listed"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-5">
-                    {product.offerPercentage > 0 ? (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-                        {product.offerPercentage}%
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
-                        No Offer
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            navigate(`/admin/products/edit/${product._id}`)
-                          }
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedProduct(product);
-                            setIsUnlistDialogOpen(true);
-                          }}
-                          className={
-                            product.unListed ? "text-green-500" : "text-red-500"
-                          }
-                        >
-                          {product.unListed ? "List" : "Unlist"}
-                        </DropdownMenuItem>
-                        {product.offerPercentage > 0 ? (
-                          <DropdownMenuItem
-                          className="text-red-600"
-                            onClick={() => {
-                              setSelectedProduct(product);
-                              setIsOfferDialogOpen(true);
-                            }}
-                          >
-                            Remove Offer
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                          className="text-green-600"
-                            onClick={() => {
-                              setSelectedProduct(product);
-                              setIsOfferDialogOpen(true);
-                            }}
-                          >
-                            Add Offer
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        {totalPages > 1 && (
-          <div className="flex items-center justify-end mt-5 mr-4 gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
-            <span className="text-sm font-medium">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+                      Add Offer
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
         )}
-      </div>
+      />
 
       {selectedProduct && isOfferDialogOpen && (
         <Dialog
