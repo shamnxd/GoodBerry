@@ -100,24 +100,14 @@ export function VeryOtp() {
         onChange={(value) => setValue(value)}
         pattern={REGEXP_ONLY_DIGITS}
       >
-        <InputOTPGroup>
-          <InputOTPSlot index={0} className="border-gray-300 w-11 h-12" />
+        <InputOTPGroup className="gap-2">
+          <InputOTPSlot index={0} className="border border-gray-300 rounded-lg w-11 h-12" />
+          <InputOTPSlot index={1} className="border border-gray-300 rounded-lg w-11 h-12" />
+          <InputOTPSlot index={2} className="border border-gray-300 rounded-lg w-11 h-12" />
+          <InputOTPSlot index={3} className="border border-gray-300 rounded-lg w-11 h-12" />
+          <InputOTPSlot index={4} className="border border-gray-300 rounded-lg w-11 h-12" />
+          <InputOTPSlot index={5} className="border border-gray-300 rounded-lg w-11 h-12" />
         </InputOTPGroup>
-        <InputOTPGroup>
-          <InputOTPSlot index={1} className="border-gray-300 w-11 h-12" />
-        </InputOTPGroup>
-        <InputOTPGroup>
-          <InputOTPSlot index={2} className="border-gray-300 w-11 h-12" />
-        </InputOTPGroup>
-        <InputOTPGroup>
-          <InputOTPSlot index={3} className="border-gray-300 w-11 h-12" />
-        </InputOTPGroup>
-        <InputOTPGroup>
-          <InputOTPSlot index={4} className="border-gray-300 w-11 h-12" />
-        </InputOTPGroup>
-        <InputOTPGroup>
-          <InputOTPSlot index={5} className="border-gray-300 w-11 h-12"/>
-          </InputOTPGroup>
       </InputOTP>
       <p
         className="text-gray-800 mb-2 font-bold mt-3"
