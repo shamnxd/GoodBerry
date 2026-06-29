@@ -64,7 +64,13 @@ exports.addToWishlist = async (req, res) => {
         if (!wishlist) {
             wishlist = new Wishlist({ userId: req.user.id, products: [wishlistItem] });
         } else {
-            wishlist.products.push(wishlistItem);
+            const isExist = wishlist.products.some(
+                item => item.productId.toString() === productId.toString() && 
+                        item.variantId.toString() === variantId.toString()
+            );
+            if (!isExist) {
+                wishlist.products.push(wishlistItem);
+            }
         }
 
         await wishlist.save();

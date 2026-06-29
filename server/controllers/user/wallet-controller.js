@@ -15,9 +15,10 @@ const razorpay = new Razorpay({
 const walletController = {
   getWallet: async (req, res) => {
     try {
-      const wallet = await Wallet.findOne({ userId: req.user.id });
+      let wallet = await Wallet.findOne({ userId: req.user.id });
       if (!wallet) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({ message: MESSAGES.WALLET_NOT_FOUND });
+        wallet = new Wallet({ userId: req.user.id, balance: 0, transactions: [] });
+        await wallet.save();
       }
       res.json(wallet);
     } catch (error) {
@@ -30,9 +31,10 @@ const walletController = {
   getTransactions: async (req, res) => {
     try {
       const { page = 1, limit = 10 } = req.query;
-      const wallet = await Wallet.findOne({ userId: req.user.id });
+      let wallet = await Wallet.findOne({ userId: req.user.id });
       if (!wallet) {
-        return res.status(HTTP_STATUS.NOT_FOUND).json({ message: MESSAGES.WALLET_NOT_FOUND });
+        wallet = new Wallet({ userId: req.user.id, balance: 0, transactions: [] });
+        await wallet.save();
       }
 
       const reversedTransactions = [...wallet.transactions].reverse();
