@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Edit, Loader2 } from "lucide-react";
+import { Edit, Loader2, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +28,9 @@ const passwordSchema = z.object({
 })
 
 const PasswordPage = () => {
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { isLoading } = useSelector((state) => state.account);
 
@@ -84,12 +88,21 @@ const PasswordPage = () => {
               <label className="block text-sm font-medium mb-2">
                 Current Password
               </label>
-              <Input
-                className="max-w-[400px]"
-                type="password"
-                placeholder="Enter current password"
-                {...register("currentPassword")}
-              />
+              <div className="relative max-w-[400px]">
+                <Input
+                  className="pr-10"
+                  type={showCurrentPassword ? "text" : "password"}
+                  placeholder="Enter current password"
+                  {...register("currentPassword")}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.currentPassword && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.currentPassword.message}
@@ -100,12 +113,21 @@ const PasswordPage = () => {
               <label className="block text-sm font-medium mb-2">
                 New Password
               </label>
-              <Input
-                className="max-w-[400px]"
-                type="password"
-                placeholder="Enter new password"
-                {...register("newPassword")}
-              />
+              <div className="relative max-w-[400px]">
+                <Input
+                  className="pr-10"
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  {...register("newPassword")}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.newPassword && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.newPassword.message}
@@ -116,12 +138,21 @@ const PasswordPage = () => {
               <label className="block text-sm font-medium mb-2">
                 Confirm Password
               </label>
-              <Input
-                className="max-w-[400px]"
-                type="password"
-                placeholder="Confirm new password"
-                {...register("confirmPassword")}
-              />
+              <div className="relative max-w-[400px]">
+                <Input
+                  className="pr-10"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm new password"
+                  {...register("confirmPassword")}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="text-sm text-red-500 mt-1">
                   {errors.confirmPassword.message}
