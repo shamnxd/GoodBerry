@@ -465,6 +465,13 @@ export default function CheckoutPage() {
       });
   };
 
+  const handleRemoveCoupon = () => {
+    dispatch({ type: "shop/applyCoupon/fulfilled", payload: {} });
+    toast({
+      title: MESSAGES.COUPON_REMOVED || "Coupon removed",
+    });
+  };
+
   if (paymentSuccess) {
     return <OrderSuccess data={orderDetails} />;
   }
@@ -848,7 +855,21 @@ export default function CheckoutPage() {
                   <div className="border-t pt-3 space-y-1.5">
                     <div className="flex justify-between text-sm"><span className="text-gray-600">Subtotal</span><span>₹{summary.subtotal.toFixed(2)}</span></div>
                     <div className="flex justify-between text-sm"><span className="text-gray-600">Discount</span><span>-₹{summary.discount.toFixed(2)}</span></div>
-                    {coupon.discount && (<div className="flex justify-between text-sm"><span className="text-gray-600">Coupon</span><span>-₹{summary.coupon.toFixed(2)}</span></div>)}
+                     {coupon.discount && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600 flex items-center gap-2">
+                          Coupon ({coupon.code || coupon.couponId || "Applied"})
+                          <button
+                            type="button"
+                            onClick={handleRemoveCoupon}
+                            className="text-xs text-red-600 hover:text-red-800 underline font-semibold transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </span>
+                        <span>-₹{summary.coupon.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm"><span className="text-gray-600">Shipping</span><span>₹{summary.shipping.toFixed(2)}</span></div>
                     <div className="flex justify-between font-semibold border-t pt-1.5"><span>Total</span><span className="text-[#8ec743]">₹{summary.total.toFixed(2)}</span></div>
                   </div>
