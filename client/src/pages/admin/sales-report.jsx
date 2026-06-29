@@ -13,7 +13,7 @@ import { useForm } from "react-hook-form";
 import api from "@/api";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 const SalesPeriod = {
@@ -150,7 +150,7 @@ export default function SalesReportPage() {
       doc.setFontSize(10);
       doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 40);
   
-      doc.autoTable({
+      autoTable(doc, {
         startY: 50,
         headStyles: { fillColor: [0, 0, 0], textColor: 255 },
         body: allOrders.map((order) => [
@@ -173,7 +173,7 @@ export default function SalesReportPage() {
         ],
       });
   
-      doc.autoTable({
+      autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 10,
         headStyles: { fillColor: [0, 0, 0], textColor: 255 },
         head: [["Metric", "Value"]],
