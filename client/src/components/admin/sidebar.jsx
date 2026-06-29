@@ -114,7 +114,7 @@ function AdminSideBar({ open, setOpen }) {
     <>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 p-0 bg-slate-900 border-r border-slate-800 text-white">
-          <div className="flex flex-col h-full py-6 overflow-y-auto">
+          <div className="flex flex-col h-full py-6 overflow-y-auto custom-scrollbar">
             <div className="px-6 mb-6">
               <div
                 onClick={() => {
@@ -141,7 +141,7 @@ function AdminSideBar({ open, setOpen }) {
             <h1 className="text-xl font-black tracking-tight text-white">Admin Panel</h1>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto py-6">
+        <div className="flex-1 overflow-y-auto py-6 custom-scrollbar">
           <MenuItems />
         </div>
       </aside>
