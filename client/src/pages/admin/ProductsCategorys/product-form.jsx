@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Plus, Trash } from "lucide-react";
+import { X, Plus, Trash, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import MESSAGES from '../../../constants/messages';
+import { cn } from "@/lib/utils";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import {
-
   Select,
   SelectContent,
   SelectItem,
@@ -39,6 +40,8 @@ export default function ProductForm() {
   const dispatch = useDispatch();
 
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
@@ -100,6 +103,10 @@ export default function ProductForm() {
 
   const availableCategories = categories.filter(
     (category) => category.status === "Active"
+  );
+
+  const filteredCategories = availableCategories.filter((category) =>
+    category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
   const handleAddVariant = () => {
@@ -463,21 +470,60 @@ export default function ProductForm() {
               </div>
               <div>
                 <Label htmlFor="category">Category</Label>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                >
-                  <SelectTrigger id="category" className="w-full mt-1">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCategories.map((category) => (
-                      <SelectItem key={category._id} value={category._id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="category"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isCategoryPopoverOpen}
+                      className="w-full justify-between mt-1 font-normal text-left"
+                    >
+                      {selectedCategory
+                        ? availableCategories.find(
+                            (category) => category._id === selectedCategory
+                          )?.name || "Select a category"
+                        : "Select a category"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 z-[100] max-h-[300px] flex flex-col bg-white border border-gray-200 rounded-md shadow-lg" align="start">
+                    <div className="p-2 border-b border-gray-100">
+                      <Input
+                        placeholder="Search category..."
+                        value={categorySearchTerm}
+                        onChange={(e) => setCategorySearchTerm(e.target.value)}
+                        className="h-8 w-full"
+                      />
+                    </div>
+                    <div className="overflow-y-auto max-h-[220px] p-1 flex-1">
+                      {filteredCategories.length === 0 ? (
+                        <p className="text-sm text-gray-500 p-2 text-center">No category found.</p>
+                      ) : (
+                        filteredCategories.map((category) => (
+                          <button
+                            key={category._id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCategory(category._id);
+                              setIsCategoryPopoverOpen(false);
+                              setCategorySearchTerm("");
+                            }}
+                            className={cn(
+                              "w-full text-left px-3 py-2 text-sm rounded flex items-center justify-between hover:bg-gray-100 transition-colors",
+                              selectedCategory === category._id && "bg-gray-50 font-medium text-primary"
+                            )}
+                          >
+                            <span>{category.name}</span>
+                            {selectedCategory === category._id && (
+                              <Check className="h-4 w-4 text-green-600" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 

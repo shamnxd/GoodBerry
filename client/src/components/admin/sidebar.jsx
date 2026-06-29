@@ -91,13 +91,13 @@ const MenuItems = ({ setOpen }) => {
             navigate(menuItem.path);
             if (setOpen) setOpen(false);
           }}
-          className={`flex cursor-pointer text-sm font-medium items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
+          className={`group flex cursor-pointer text-sm font-medium items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
             activeItem === menuItem.id 
               ? "bg-[#8CC63F] text-white shadow-md shadow-[#8CC63F]/20" 
-              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              : "text-slate-400 hover:bg-slate-800 hover:text-white"
           }`}
         >
-          <div className={`${activeItem === menuItem.id ? "text-white" : "text-slate-500"}`}>
+          <div className={`transition-colors duration-200 ${activeItem === menuItem.id ? "text-white" : "text-slate-400 group-hover:text-white"}`}>
             {menuItem.icon}
           </div>
           <span>{menuItem.label}</span>
@@ -113,7 +113,7 @@ function AdminSideBar({ open, setOpen }) {
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-72 p-0 bg-white border-r-0">
+        <SheetContent side="left" className="w-72 p-0 bg-slate-900 border-r border-slate-800 text-white">
           <div className="flex flex-col h-full py-6 overflow-y-auto">
             <div className="px-6 mb-6">
               <div
@@ -124,21 +124,21 @@ function AdminSideBar({ open, setOpen }) {
                 className="flex cursor-pointer items-center gap-3 transition-transform hover:scale-105"
               >
                 <ChartNoAxesCombined className="text-[#8CC63F]" size={32} />
-                <h1 className="text-2xl font-black tracking-tight text-slate-900">Admin Panel</h1>
+                <h1 className="text-2xl font-black tracking-tight text-white">Admin Panel</h1>
               </div>
             </div>
             <MenuItems setOpen={setOpen} />
           </div>
         </SheetContent>
       </Sheet>
-      <aside className="hidden lg:flex w-[250px] flex-col border-r border-slate-100 bg-white fixed inset-y-0 left-0 z-50 shadow-sm">
-        <div className="h-20 flex items-center px-8 border-b border-slate-50">
+      <aside className="hidden lg:flex w-[250px] flex-col border-r border-slate-800 bg-slate-900 fixed inset-y-0 left-0 z-50 shadow-lg text-white">
+        <div className="h-20 flex items-center px-8 border-b border-slate-800">
           <div
             onClick={() => navigate("/admin/dashboard")}
             className="flex cursor-pointer items-center gap-3 transition-transform hover:scale-105"
           >
             <ChartNoAxesCombined className="text-[#8CC63F]" size={28} />
-            <h1 className="text-xl font-black tracking-tight text-slate-900">Admin Panel</h1>
+            <h1 className="text-xl font-black tracking-tight text-white">Admin Panel</h1>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto py-6">
