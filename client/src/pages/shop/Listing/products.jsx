@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "react-router-dom"
-import { ChevronRight, Menu, Search, X } from "lucide-react"
+import { ChevronRight, ChevronLeft, Menu, Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -266,6 +266,17 @@ export default function ShopPage() {
               {!loading && pagination.totalPages > 1 && (
                 <div className="mt-8 flex justify-center">
                   <nav className="flex items-center gap-2" aria-label="Pagination">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setCurrentPage(currentPage - 1)
+                        window.scrollTo({ top: 0, behavior: 'smooth' })
+                      }}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
                     {Array.from({ length: pagination.totalPages }).map((_, i) => (
                       <Button
                         key={i + 1}
