@@ -6,7 +6,7 @@ const MESSAGES = require('../../constants/messages');
 
 const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 5, search = '' } = req.query;
+    const { page = 1, limit = 5, search = '', status = 'all' } = req.query;
     const skip = (page - 1) * limit;
 
     const searchQuery = search
@@ -18,8 +18,17 @@ const getAllUsers = async (req, res) => {
         }
       : {};
 
+    const statusQuery = status !== 'all'
+      ? { isBlocked: status === 'blocked' }
+      : {};
+
+    const finalQuery = {
+      ...searchQuery,
+      ...statusQuery,
+    };
+
     const users = await User.aggregate([
-      { $match: searchQuery }, 
+      { $match: finalQuery }, 
       {
         $lookup: {
           from: 'orders',
@@ -38,7 +47,7 @@ const getAllUsers = async (req, res) => {
       { $limit: parseInt(limit) },
     ]);
 
-    const totalUsers = await User.countDocuments(searchQuery);
+    const totalUsers = await User.countDocuments(finalQuery);
 
     res.status(HTTP_STATUS.OK).json({
       users,

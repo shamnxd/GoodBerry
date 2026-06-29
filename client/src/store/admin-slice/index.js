@@ -24,10 +24,10 @@ const initialState = {
 // Thunk to Fetch Users
 export const fetchUsers = createAsyncThunk(
   "admin/fetchUsers",
-  async ({ page = 1, limit = 6, search = '' } = {}, thunkAPI) => {
+  async ({ page = 1, limit = 5, search = '', status = 'all' } = {}, thunkAPI) => {
     try {
       const response = await api.get(`${API_ENDPOINTS.ADMIN.USERS}`, {
-        params: { page, limit, search },
+        params: { page, limit, search, status },
         withCredentials: true,
       });
       return response.data;
@@ -56,11 +56,11 @@ export const updateUserStatus = createAsyncThunk(
 
 export const getAllCategories = createAsyncThunk(
   "admin/getAllCategories",
-  async ({ page = 1, limit = 5 } = {}, thunkAPI) => {
+  async (params = {}, thunkAPI) => {
     try {
       const response = await api.get(`${API_ENDPOINTS.ADMIN.CATEGORIES}`,
       {
-        params: { page, limit },
+        params,
         withCredentials: true,
       });
       return response.data;
@@ -176,10 +176,10 @@ export const unlistProduct = createAsyncThunk(
 // Thunk to Fetch Products
 export const fetchProducts = createAsyncThunk(
   "admin/fetchProducts",
-  async ({ page = 1, limit = 5, search = '' } = {}, thunkAPI) => {
+  async ({ page = 1, limit = 5, search = '', status = 'all' } = {}, thunkAPI) => {
     try {
       const response = await api.get(`${API_ENDPOINTS.ADMIN.PRODUCTS}`, {
-        params: { page, limit, search },
+        params: { page, limit, search, status },
         withCredentials: true,
       });
       return response.data;

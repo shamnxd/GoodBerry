@@ -54,7 +54,7 @@ const addProduct = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 5, search = '' } = req.query;
+    const { page = 1, limit = 5, search = '', status = 'all' } = req.query;
     const searchQuery = search
       ? {
           $or: [
@@ -64,12 +64,21 @@ const getAllProducts = async (req, res) => {
         }
       : {};
 
-    const products = await Product.find(searchQuery)
+    const statusQuery = status !== 'all'
+      ? { unListed: status === 'unlisted' }
+      : {};
+
+    const finalQuery = {
+      ...searchQuery,
+      ...statusQuery,
+    };
+
+    const products = await Product.find(finalQuery)
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
 
-    const totalProducts = await Product.countDocuments(searchQuery);
+    const totalProducts = await Product.countDocuments(finalQuery);
 
     const productsWithDetails = await Promise.all(
       products.map(async (product) => {

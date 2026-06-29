@@ -26,22 +26,32 @@ const addCategory = async (req, res) => {
 // Get all categories
 const getAllCategories = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 6;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const search = req.query.search || '';
+    const status = req.query.status || 'all';
 
+    const filter = {
+      ...(status !== 'all' ? { status } : {}),
+      ...(search ? { name: { $regex: search, $options: 'i' } } : {})
+    };
 
-    const categories = await Category.find()
-    .skip((page - 1) * limit)
-    .limit(limit);
+    let categories;
+    const totalCategorys = await Category.countDocuments(filter);
 
-    const totalCategorys = await Category.countDocuments();
-
+    if (page !== null && limit !== null) {
+      categories = await Category.find(filter)
+        .skip((page - 1) * limit)
+        .limit(limit);
+    } else {
+      categories = await Category.find(filter);
+    }
 
     res.status(HTTP_STATUS.OK).json({
       categories,
       totalCategorys,
-      currentPage: page,
-      totalPages: Math.ceil(totalCategorys / limit),
+      currentPage: page || 1,
+      totalPages: limit ? Math.ceil(totalCategorys / limit) : 1,
     });
   } catch (error) {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: MESSAGES.FAILED_TO_FETCH_CATEGORIES });

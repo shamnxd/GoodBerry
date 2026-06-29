@@ -8,7 +8,7 @@ const MESSAGES = require('../../constants/messages');
 const couponController = {
   getAllCoupons: async (req, res) => {
     try {
-      const { page = 1, limit = 10, search = '' } = req.query;
+      const { page = 1, limit = 10, search = '', status = 'all' } = req.query;
       const searchQuery = search
         ? {
           $or: [
@@ -18,12 +18,17 @@ const couponController = {
         }
         : {};
 
-      const coupons = await Coupon.find(searchQuery)
+      const finalQuery = {
+        ...searchQuery,
+        ...(status !== 'all' ? { status } : {})
+      };
+
+      const coupons = await Coupon.find(finalQuery)
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
         .sort({ createdAt: -1 });     
 
-      const totalCoupons = await Coupon.countDocuments(searchQuery);
+      const totalCoupons = await Coupon.countDocuments(finalQuery);
 
       const currentDate = new Date();
       for (const coupon of coupons) {

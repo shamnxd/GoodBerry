@@ -5,8 +5,8 @@ import { API_ENDPOINTS } from "@/api/endpoints";
 
 
 
-export const fetchCoupons = createAsyncThunk('coupons/fetchCoupons', async ({ page, search }) => {
-  const response = await api.get(`${API_ENDPOINTS.ADMIN.COUPONS}?page=${page}&search=${search}`, { withCredentials: true });
+export const fetchCoupons = createAsyncThunk('coupons/fetchCoupons', async ({ page = 1, search = '', status = 'all', limit = 5 } = {}) => {
+  const response = await api.get(`${API_ENDPOINTS.ADMIN.COUPONS}?page=${page}&search=${search}&status=${status}&limit=${limit}`, { withCredentials: true });
   return response.data;
 });
 

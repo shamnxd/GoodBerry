@@ -25,9 +25,14 @@ const orderController = {
       }
 
       if (search) {
+        const users = await User.find({
+          username: { $regex: search, $options: 'i' }
+        });
+        const userIds = users.map(u => u._id);
+
         query.$or = [
           { orderId: { $regex: search, $options: 'i' } },
-          { 'userId.username': { $regex: search, $options: 'i' } }
+          { userId: { $in: userIds } }
         ];
       }
 
