@@ -10,8 +10,42 @@ function AdminHeader({ setOpen }) {
   const { user } = useSelector((state) => state.auth);
   const location = useLocation();
 
-  const currentPage = location.pathname.split("/").pop();
-  const title = currentPage ? currentPage.charAt(0).toUpperCase() + currentPage.slice(1) : "Dashboard";
+  const getHeaderTitle = (pathname) => {
+    const parts = pathname.split("/").filter(Boolean);
+    if (parts.length <= 1) return "Dashboard";
+    
+    const section = parts[1];
+    
+    if (section === "products") {
+      if (parts.includes("edit")) return "Edit Product";
+      if (parts.includes("add")) return "Add Product";
+      return "Products";
+    }
+    if (section === "orders") {
+      if (parts.length > 2) return "Order Details";
+      return "Orders";
+    }
+    if (section === "categorys" || section === "categories") {
+      return "Categories";
+    }
+    if (section === "customers") {
+      return "Customers";
+    }
+    if (section === "coupon" || section === "coupons") {
+      return "Coupons";
+    }
+    if (section === "dashboard") {
+      return "Dashboard";
+    }
+
+    const lastPart = parts[parts.length - 1];
+    const isId = /^[0-9a-fA-F]{24}$/.test(lastPart) || !isNaN(lastPart);
+    const displayPart = isId && parts.length > 2 ? parts[parts.length - 2] : lastPart;
+    
+    return displayPart.charAt(0).toUpperCase() + displayPart.slice(1);
+  };
+
+  const title = getHeaderTitle(location.pathname);
 
   function handleLogout() {
     dispatch(logoutUser());
