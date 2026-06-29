@@ -11,13 +11,14 @@ import {
   ChevronRight,
   Award,
 } from 'lucide-react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '@/store/auth-slice';
 
 const Account = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useSelector((state) => state.auth);
 
   const isRoot = location.pathname === '/account' || location.pathname === '/account/';
 
@@ -42,7 +43,14 @@ const Account = () => {
         
         {/* Sidebar - Hidden on mobile when viewing sub-pages */}
         <div className={`w-full lg:w-80 ${!isRoot ? 'hidden lg:block' : 'block'}`}>
-          <div className="overflow-hidden">
+          <div className="overflow-hidden bg-white border border-gray-100 rounded-lg shadow-sm">
+            {/* User Hello Sidebar Header */}
+            <div className="p-5 border-b border-gray-100 bg-gray-50/50">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Welcome back,</span>
+              <h2 className="text-xl font-extrabold text-[#8CC63F] font-signika mt-0.5">
+                Hello, {user?.username || user?.userName || "User"}
+              </h2>
+            </div>
             
             <div className="flex flex-col">
               {menuItems.map((item) => (
