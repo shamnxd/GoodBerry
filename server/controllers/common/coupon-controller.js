@@ -67,7 +67,51 @@ const couponController = {
     try {
       const { code, description, discount, startDate, endDate, usageLimit, minimumAmount, status } = req.body;
 
-      const existingCoupon = await Coupon.findOne({ code });
+      if (!code || typeof code !== 'string' || code.trim() === '') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_CODE_REQUIRED });
+      }
+      const trimmedCode = code.trim().toUpperCase();
+      if (!/^[A-Z0-9]+$/.test(trimmedCode)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_CODE_INVALID });
+      }
+      if (!description || typeof description !== 'string' || description.trim() === '') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_DESCRIPTION_REQUIRED });
+      }
+      const numDiscount = Number(discount);
+      if (isNaN(numDiscount) || numDiscount <= 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_DISCOUNT_INVALID });
+      }
+      const numMinAmount = Number(minimumAmount);
+      if (isNaN(numMinAmount) || numMinAmount < 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_MIN_AMOUNT_NEGATIVE });
+      }
+      if (numMinAmount < numDiscount) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_MIN_AMOUNT_LESS_THAN_DISCOUNT });
+      }
+      const numUsageLimit = Number(usageLimit);
+      if (isNaN(numUsageLimit) || !Number.isInteger(numUsageLimit) || numUsageLimit <= 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_USAGE_LIMIT_INVALID });
+      }
+      if (!startDate || !endDate) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_START_END_DATE_REQUIRED });
+      }
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_DATE_FORMAT_INVALID });
+      }
+      if (end < start) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_END_DATE_BEFORE_START });
+      }
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const endCheck = new Date(endDate);
+      endCheck.setHours(0,0,0,0);
+      if (endCheck < today) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_END_DATE_IN_PAST });
+      }
+
+      const existingCoupon = await Coupon.findOne({ code: trimmedCode });
       if (existingCoupon) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
@@ -75,7 +119,16 @@ const couponController = {
         });
       }
 
-      const newCoupon = new Coupon({ code, description, discount, startDate, endDate, usageLimit, minimumAmount, status });
+      const newCoupon = new Coupon({ 
+        code: trimmedCode, 
+        description: description.trim(), 
+        discount: numDiscount, 
+        startDate, 
+        endDate, 
+        usageLimit: numUsageLimit, 
+        minimumAmount: numMinAmount, 
+        status 
+      });
       const savedCoupon = await newCoupon.save();
 
       res.status(HTTP_STATUS.CREATED).json({
@@ -99,7 +152,51 @@ const couponController = {
     const { code, description, discount, startDate, endDate, usageLimit, minimumAmount, status } = req.body;
 
     try {
-      const existingCoupon = await Coupon.findOne({ code, _id: { $ne: id } });
+      if (!code || typeof code !== 'string' || code.trim() === '') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_CODE_REQUIRED });
+      }
+      const trimmedCode = code.trim().toUpperCase();
+      if (!/^[A-Z0-9]+$/.test(trimmedCode)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_CODE_INVALID });
+      }
+      if (!description || typeof description !== 'string' || description.trim() === '') {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_DESCRIPTION_REQUIRED });
+      }
+      const numDiscount = Number(discount);
+      if (isNaN(numDiscount) || numDiscount <= 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_DISCOUNT_INVALID });
+      }
+      const numMinAmount = Number(minimumAmount);
+      if (isNaN(numMinAmount) || numMinAmount < 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_MIN_AMOUNT_NEGATIVE });
+      }
+      if (numMinAmount < numDiscount) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_MIN_AMOUNT_LESS_THAN_DISCOUNT });
+      }
+      const numUsageLimit = Number(usageLimit);
+      if (isNaN(numUsageLimit) || !Number.isInteger(numUsageLimit) || numUsageLimit <= 0) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_USAGE_LIMIT_INVALID });
+      }
+      if (!startDate || !endDate) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_START_END_DATE_REQUIRED });
+      }
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_DATE_FORMAT_INVALID });
+      }
+      if (end < start) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_END_DATE_BEFORE_START });
+      }
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const endCheck = new Date(endDate);
+      endCheck.setHours(0,0,0,0);
+      if (endCheck < today) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.COUPON_END_DATE_IN_PAST });
+      }
+
+      const existingCoupon = await Coupon.findOne({ code: trimmedCode, _id: { $ne: id } });
       if (existingCoupon) {
         return res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
@@ -109,7 +206,16 @@ const couponController = {
 
       const updatedCoupon = await Coupon.findByIdAndUpdate(
         id,
-        { code, description, discount, startDate, endDate, usageLimit, minimumAmount, status },
+        { 
+          code: trimmedCode, 
+          description: description.trim(), 
+          discount: numDiscount, 
+          startDate, 
+          endDate, 
+          usageLimit: numUsageLimit, 
+          minimumAmount: numMinAmount, 
+          status 
+        },
         { new: true }
       );
 

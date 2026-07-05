@@ -10,13 +10,18 @@ const MESSAGES = require('../../constants/messages');
 const addCategoryOffer = async (req, res) => {
   try {
     const { categoryId, offerPercentage } = req.body;
+    const parsedOffer = parseInt(offerPercentage, 10);
+    if (offerPercentage === undefined || offerPercentage === null || isNaN(parsedOffer) || parsedOffer <= 0 || parsedOffer > 99) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.OFFER_PERCENTAGE_INVALID });
+    }
+
     const category = await Category.findById(categoryId);
 
     if (!category) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: MESSAGES.CATEGORY_NOT_FOUND });
     }
 
-    category.offerPercentage = offerPercentage;
+    category.offerPercentage = parsedOffer;
     await category.save();
 
     // Update sale prices for all variants in this category
@@ -154,10 +159,15 @@ const addProductOffer = async (req, res) => {
   const { id } = req.params;
   const { offerPercentage } = req.body;
 
+  const parsedOffer = parseInt(offerPercentage, 10);
+  if (offerPercentage === undefined || offerPercentage === null || isNaN(parsedOffer) || parsedOffer <= 0 || parsedOffer > 99) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.OFFER_PERCENTAGE_INVALID });
+  }
+
   try {
     const product = await Product.findByIdAndUpdate(
       id,
-      { offerPercentage },
+      { offerPercentage: parsedOffer },
       { new: true }
     );
 

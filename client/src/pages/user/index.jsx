@@ -45,7 +45,7 @@ const Account = () => {
         <div className={`w-full lg:w-80 ${!isRoot ? 'hidden lg:block' : 'block'}`}>
           <div className="overflow-hidden bg-white border border-gray-100 rounded-lg shadow-sm">
             {/* User Hello Sidebar Header */}
-            <div className="p-5 border-b border-gray-100 bg-gray-50/50">
+            <div className="p-5 border-b border-gray-100 bg-gray-50/50 lg:hidden">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Welcome back,</span>
               <h2 className="text-xl font-extrabold text-[#8CC63F] font-signika mt-0.5">
                 Hello, {user?.username || user?.userName || "User"}

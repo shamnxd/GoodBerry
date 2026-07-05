@@ -116,8 +116,17 @@ export default function ProductsPage() {
 
   const handleAddOffer = async () => {
     if (selectedProduct) {
+      const parsedOffer = parseInt(offerPercentage, 10);
+      if (!offerPercentage || isNaN(parsedOffer) || parsedOffer <= 0 || parsedOffer > 99) {
+        toast({
+          title: MESSAGES.ERROR,
+          description: "Offer percentage must be a number between 1 and 99",
+          variant: "destructive",
+        });
+        return;
+      }
       const data = await dispatch(
-        addProductOffer({ productId: selectedProduct._id, offerPercentage })
+        addProductOffer({ productId: selectedProduct._id, offerPercentage: parsedOffer })
       );
 
       if (data.payload.success) {
@@ -348,7 +357,14 @@ export default function ProductsPage() {
                       type="number"
                       placeholder="Enter offer percentage"
                       value={offerPercentage}
-                      onChange={(e) => setOfferPercentage(e.target.value)}
+                      min="1"
+                      max="99"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || (parseInt(value, 10) >= 0 && parseInt(value, 10) <= 99)) {
+                          setOfferPercentage(value);
+                        }
+                      }}
                     />
                     <DialogFooter className={"mt-7"}>
                       <Button

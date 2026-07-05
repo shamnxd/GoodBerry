@@ -5,7 +5,7 @@ import { fetchDashboardData } from "@/store/admin-slice"
 import { Users, CreditCard, Activity, IndianRupee } from "lucide-react"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts"
+import { Line, LineChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts"
 
 const metricColorClassMap = {
   green: "text-green-600",
@@ -125,14 +125,14 @@ function Top10Products() {
 
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <LineChart data={top10Products}>
+      <BarChart data={top10Products}>
         <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
         <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
         <Tooltip />
         <Legend />
         <CartesianGrid stroke="#f5f5f5" />
-        <Line type="monotone" dataKey="sales" stroke="#adfa1d" strokeWidth={2} />
-      </LineChart>
+        <Bar dataKey="sales" fill="#adfa1d" radius={[4, 4, 0, 0]} />
+      </BarChart>
     </ResponsiveContainer>
   )
 }
@@ -146,14 +146,14 @@ function Top10Categories() {
 
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <LineChart data={top10Categories}>
+      <BarChart data={top10Categories}>
         <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
         <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
         <Tooltip />
         <Legend />
         <CartesianGrid stroke="#f5f5f5" />
-        <Line type="monotone" dataKey="sales" stroke="#22c55e" strokeWidth={2} />
-      </LineChart>
+        <Bar dataKey="sales" fill="#22c55e" radius={[4, 4, 0, 0]} />
+      </BarChart>
     </ResponsiveContainer>
   )
 }
