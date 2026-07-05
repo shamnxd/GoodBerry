@@ -457,7 +457,7 @@ export default function ProductPage() {
                 <button
                   key={i}
                   className={cn(
-                    "relative h-20 w-20 flex-shrink-0 rounded-lg border bg-white",
+                    "relative h-20 w-20 flex-shrink-0 rounded-lg border bg-white overflow-hidden",
                     selectedImage === image && "ring-2 ring-primary"
                   )}
                   onClick={() => setSelectedImage(image)}
@@ -465,7 +465,7 @@ export default function ProductPage() {
                   <img
                     src={image}
                     alt={`${flavor?.title} thumbnail ${i + 1}`}
-                    className="object-cover rounded-md"
+                    className="w-full h-full object-cover"
                   />
                 </button>
               ))}

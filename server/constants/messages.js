@@ -151,6 +151,18 @@ const MESSAGES = Object.freeze({
   WALLET_NOT_FOUND: 'Wallet not found',
   YOU_ARE_NOT_AN_ADMIN: 'You are not an admin',
   YOU_HAVE_ALREADY_USED_THIS_COUPON: 'You have already used this coupon',
+  COUPON_CODE_REQUIRED: 'Coupon code is required.',
+  COUPON_CODE_INVALID: 'Coupon code must be uppercase alphanumeric and contain no spaces.',
+  COUPON_DESCRIPTION_REQUIRED: 'Description is required.',
+  COUPON_DISCOUNT_INVALID: 'Discount must be positive.',
+  COUPON_MIN_AMOUNT_NEGATIVE: 'Minimum amount cannot be negative.',
+  COUPON_MIN_AMOUNT_LESS_THAN_DISCOUNT: 'Minimum amount must be greater than or equal to the discount amount.',
+  COUPON_USAGE_LIMIT_INVALID: 'Usage limit must be a positive integer.',
+  COUPON_START_END_DATE_REQUIRED: 'Start date and end date are required.',
+  COUPON_DATE_FORMAT_INVALID: 'Invalid start date or end date format.',
+  COUPON_END_DATE_BEFORE_START: 'End date must be on or after start date.',
+  COUPON_END_DATE_IN_PAST: 'End date cannot be in the past.',
+  OFFER_PERCENTAGE_INVALID: 'Offer percentage must be a number between 1 and 99.',
 });
 
 module.exports = MESSAGES;

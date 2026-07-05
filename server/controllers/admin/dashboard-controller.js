@@ -5,6 +5,7 @@ const Category = require('../../models/Categorys');
 const Variant = require('../../models/Variant');
 const HTTP_STATUS = require('../../constants/statusCodes');
 const MESSAGES = require('../../constants/messages');
+const ORDER_STATUS = require('../../constants/orderStatus');
 
 
 
@@ -38,7 +39,7 @@ const dashboardController = {
       }
 
       const totalRevenue = await Order.aggregate([
-        { $match: { status: 'delivered', createdAt: dateFilter } },
+        { $match: { status: ORDER_STATUS.DELIVERED, createdAt: dateFilter } },
         { $group: { _id: null, total: { $sum: '$total' } } }
       ]);
 
@@ -48,19 +49,19 @@ const dashboardController = {
       });
 
       const totalSales = await Order.countDocuments({
-        status: 'delivered',
+        status: ORDER_STATUS.DELIVERED,
         createdAt: dateFilter
       });
 
       const totalCancelled = await Order.countDocuments({
-        status: 'cancelled',
+        status: ORDER_STATUS.CANCELLED,
         createdAt: dateFilter
       });
 
       const overviewData = await Order.aggregate([
         {
           $match: {
-            status: 'delivered',
+            status: ORDER_STATUS.DELIVERED,
             createdAt: dateFilter
           }
         },
@@ -78,7 +79,7 @@ const dashboardController = {
       ]);
 
       const top10Categories = await Order.aggregate([
-        { $match: { status: 'delivered', createdAt: dateFilter } },
+        { $match: { status: ORDER_STATUS.DELIVERED } },
         { $unwind: '$items' },
         {
           $lookup: {
@@ -113,7 +114,7 @@ const dashboardController = {
       ]);
 
       const top10Products = await Order.aggregate([
-        { $match: { status: 'delivered', createdAt: dateFilter } },
+        { $match: { status: ORDER_STATUS.DELIVERED } },
         { $unwind: '$items' },
         {
           $group: {
@@ -139,7 +140,7 @@ const dashboardController = {
         }
       ]);
 
-      const recentSales = await Order.find({ status: 'delivered' })
+      const recentSales = await Order.find({ status: ORDER_STATUS.DELIVERED })
         .sort({ createdAt: -1 })
         .limit(6)
         .populate('userId', 'username email')

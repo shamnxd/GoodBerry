@@ -47,6 +47,7 @@ const OrderDetails = lazy(() => import("./pages/admin/order/order-details"));
 const AdminFeatures = lazy(() => import("./pages/admin/features"));
 const CouponManagement = lazy(() => import("./pages/admin/coupon"));
 const SalesReportPage = lazy(() => import("./pages/admin/sales-report"));
+const AdminLogin = lazy(() => import("./pages/admin/admin-login"));
 
 function App() {
   const { isAuthenticated, user, isLoading } = useSelector(
@@ -147,6 +148,15 @@ function App() {
             <Route path="login/forgot-password" element={<ForgetPassword />} />
             <Route path="reset-password" element={<ResetPassword />} />
           </Route>
+
+          <Route
+            path="/admin/login"
+            element={
+              <CheckAuth isAuthenticated={isAuthenticated} user={user}>
+                <AdminLogin />
+              </CheckAuth>
+            }
+          />
 
           {/* Admin Routes */}
           <Route

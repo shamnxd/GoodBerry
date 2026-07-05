@@ -85,21 +85,28 @@ function Categorys() {
   };
 
   const confirmAddOffer = async () => {
-    if (offerPercentage) {
-      const data = await dispatch(addCategoryOffer({ categoryId: offerCategory._id, offerPercentage: parseInt(offerPercentage) }));
-      if (data.payload.success) {
-        toast({ title: MESSAGES.SUCCESS, description: data.payload.message });
-        loadCategories(currentPage);
-      } else {
-        toast({
-          title: MESSAGES.ERROR,
-          description: data.payload.message || "Failed to add offer",
-          variant: "destructive",
-        });
-      }
-      setIsOfferDialogOpen(false);
-      setOfferPercentage('');
+    const parsedOffer = parseInt(offerPercentage, 10);
+    if (!offerPercentage || isNaN(parsedOffer) || parsedOffer <= 0 || parsedOffer > 99) {
+      toast({
+        title: MESSAGES.ERROR,
+        description: "Offer percentage must be a number between 1 and 99",
+        variant: "destructive",
+      });
+      return;
     }
+    const data = await dispatch(addCategoryOffer({ categoryId: offerCategory._id, offerPercentage: parsedOffer }));
+    if (data.payload.success) {
+      toast({ title: MESSAGES.SUCCESS, description: data.payload.message });
+      loadCategories(currentPage);
+    } else {
+      toast({
+        title: MESSAGES.ERROR,
+        description: data.payload.message || "Failed to add offer",
+        variant: "destructive",
+      });
+    }
+    setIsOfferDialogOpen(false);
+    setOfferPercentage('');
   };
 
   const handleRemoveOffer = (category) => {
@@ -232,11 +239,16 @@ function Categorys() {
                 <Input
                   id="offerPercentage"
                   value={offerPercentage}
-                  onChange={(e) => setOfferPercentage(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '' || (parseInt(value, 10) >= 0 && parseInt(value, 10) <= 99)) {
+                      setOfferPercentage(value);
+                    }
+                  }}
                   className="col-span-3"
                   type="number"
-                  min="0"
-                  max="100"
+                  min="1"
+                  max="99"
                   required
                 />
               </div>

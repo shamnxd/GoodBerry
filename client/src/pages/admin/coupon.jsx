@@ -273,10 +273,30 @@ function CouponForm({ onSubmit, initialData }) {
     <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
       <div>
         <Label htmlFor="code">Coupon Code</Label>
-        <Input 
-          id="code" 
-          {...register("code", { required: "Coupon code is required" })} 
-          className="mt-1" 
+        <Controller
+          name="code"
+          control={control}
+          rules={{
+            required: "Coupon code is required",
+            pattern: {
+              value: /^[A-Z0-9]+$/,
+              message: "Only uppercase letters and numbers are allowed (no spaces or special characters)"
+            },
+            minLength: { value: 3, message: "Coupon code must be at least 3 characters" }
+          }}
+          render={({ field }) => (
+            <Input
+              id="code"
+              className="mt-1"
+              value={field.value}
+              onChange={(e) => {
+                const sanitized = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                field.onChange(sanitized);
+              }}
+              onBlur={field.onBlur}
+              placeholder="e.g. SAVE20"
+            />
+          )}
         />
         {errors.code && <span className="text-red-600 text-sm">{errors.code.message}</span>}
       </div>
@@ -300,7 +320,7 @@ function CouponForm({ onSubmit, initialData }) {
             step="0.01" 
             {...register("discount", { 
               required: "Discount amount is required",
-              min: { value: 0, message: MESSAGES.DISCOUNT_MUST_BE_POSITIVE }
+              min: { value: 0.01, message: "Discount must be positive" }
             })} 
             className="mt-1" 
           />
@@ -334,7 +354,27 @@ function CouponForm({ onSubmit, initialData }) {
         <Controller
           name="dateRange"
           control={control}
-          rules={{ required: "Date range is required" }}
+          rules={{ 
+            required: "Date range is required",
+            validate: (value) => {
+              if (!value || !value.from || !value.to) {
+                return "Start and end dates are required";
+              }
+              const fromDate = new Date(value.from);
+              const toDate = new Date(value.to);
+              if (toDate < fromDate) {
+                return "End date must be on or after start date";
+              }
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const checkToDate = new Date(value.to);
+              checkToDate.setHours(0, 0, 0, 0);
+              if (checkToDate < today) {
+                return "End date cannot be in the past";
+              }
+              return true;
+            }
+          }}
           render={({ field }) => (
             <DatePickerWithRange 
               value={field.value}
@@ -368,7 +408,15 @@ function CouponForm({ onSubmit, initialData }) {
             step="0.01" 
             {...register("minimumAmount", { 
               required: "Minimum amount is required",
-              min: { value: 0, message: MESSAGES.MINIMUM_AMOUNT_CANNOT_BE_NEGATIVE }
+              min: { value: 0, message: MESSAGES.MINIMUM_AMOUNT_CANNOT_BE_NEGATIVE },
+              validate: (value, formValues) => {
+                const discount = parseFloat(formValues.discount);
+                const minAmt = parseFloat(value);
+                if (!isNaN(discount) && minAmt < discount) {
+                  return "Minimum amount must be greater than or equal to the discount";
+                }
+                return true;
+              }
             })} 
             className="mt-1" 
           />
