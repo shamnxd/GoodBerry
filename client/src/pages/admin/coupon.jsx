@@ -273,19 +273,30 @@ function CouponForm({ onSubmit, initialData }) {
     <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
       <div>
         <Label htmlFor="code">Coupon Code</Label>
-        <Input 
-          id="code" 
-          {...register("code", { 
+        <Controller
+          name="code"
+          control={control}
+          rules={{
             required: "Coupon code is required",
             pattern: {
               value: /^[A-Z0-9]+$/,
-              message: "Coupon code must be uppercase alphanumeric and contain no spaces"
-            }
-          })} 
-          className="mt-1" 
-          onChange={(e) => {
-            e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
+              message: "Only uppercase letters and numbers are allowed (no spaces or special characters)"
+            },
+            minLength: { value: 3, message: "Coupon code must be at least 3 characters" }
           }}
+          render={({ field }) => (
+            <Input
+              id="code"
+              className="mt-1"
+              value={field.value}
+              onChange={(e) => {
+                const sanitized = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                field.onChange(sanitized);
+              }}
+              onBlur={field.onBlur}
+              placeholder="e.g. SAVE20"
+            />
+          )}
         />
         {errors.code && <span className="text-red-600 text-sm">{errors.code.message}</span>}
       </div>
