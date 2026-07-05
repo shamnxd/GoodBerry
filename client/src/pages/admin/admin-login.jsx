@@ -56,8 +56,8 @@ function AdminLoginPage() {
         }
       } else {
         toast({
-          title: payload?.message || "Login Failed",
-          description: "Please check your credentials.",
+          title: "Invalid Credentials",
+          description: "The email or password you entered is incorrect.",
           variant: "destructive",
         });
       }
