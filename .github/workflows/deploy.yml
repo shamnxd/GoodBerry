@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy GoodBerry to AWS EC2
 
 on:
   push:
@@ -8,33 +8,22 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
       - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/GoodBerry
-            git fetch origin main
-            git reset --hard origin/main
-            
-            # Backend update
-            cd server
-            npm install
-            pm2 restart api-backend || pm2 start server.js --name api-backend
-            
-            # Frontend update
-            cd ../client
-            npm install
-            export NODE_OPTIONS="--max-old-space-size=1536"
-            npm run build
-            
-            echo "Deployment successful!"
+            mkdir -p ~/apps/GoodBerry
+            cd ~/apps/GoodBerry
+            if [ -d ".git" ]; then
+              git pull origin main
+            else
+              git clone https://github.com/${{ github.repository }}.git .
+            fi
+            docker-compose up -d --build --remove-orphans || docker compose up -d --build --remove-orphans
