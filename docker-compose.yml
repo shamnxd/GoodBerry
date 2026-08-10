@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  goodberry-backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: goodberry-backend
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - web-network
+
+  goodberry-frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: goodberry-frontend
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - web-network
+
+networks:
+  web-network:
+    external: true
