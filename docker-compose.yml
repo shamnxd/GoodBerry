@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   goodberry-backend:
+    image: ghcr.io/${REGISTRY_OWNER}/goodberry-backend:latest
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -13,6 +14,7 @@ services:
       - web-network
 
   goodberry-frontend:
+    image: ghcr.io/${REGISTRY_OWNER}/goodberry-frontend:latest
     build:
       context: ./client
       dockerfile: Dockerfile
