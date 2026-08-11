@@ -24,7 +24,7 @@ function ShoppingHome() {
   }, [dispatch])
 
   useEffect(() => {
-    if (categories.length > 0 && !activeCategory) {
+    if (categories?.length > 0 && !activeCategory) {
       setActiveCategory(categories[0]._id)
     }
   }, [categories, activeCategory])

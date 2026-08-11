@@ -127,7 +127,7 @@ const shopSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {        
         builder.addCase(featuredProducts.fulfilled, (state, action) => {
-            state.featuredProds = action.payload.data;
+            state.featuredProds = action.payload?.data || [];
             state.product = {};
             state.pflavors = [];
             state.recomentedProds = []; 
@@ -138,8 +138,8 @@ const shopSlice = createSlice({
         })
         .addCase(getProducts.fulfilled, (state, action) => {
             state.loading = false
-            state.products = action.payload.data;
-            state.pagination = action.payload.pagination;
+            state.products = action.payload?.data || [];
+            state.pagination = action.payload?.pagination || {};
             state.product = {};
             state.pflavors = [];
             state.recomentedProds = []; 
@@ -152,9 +152,9 @@ const shopSlice = createSlice({
         })
 
         .addCase(getSingleProduct.fulfilled, (state, action) => {
-            state.product = action.payload.product;
-            state.recomentedProds = action.payload.recommendedProducts;
-            state.pflavors = action.payload.variantsFormatted;
+            state.product = action.payload?.product || null;
+            state.recomentedProds = action.payload?.recommendedProducts || [];
+            state.pflavors = action.payload?.variantsFormatted || [];
             state.error = null;
         })
 
@@ -169,17 +169,19 @@ const shopSlice = createSlice({
           state.wishlist = [];
         })
         .addCase(getWishlist.fulfilled, (state, action) => {
-            state.wishlist = action.payload.data;
+            state.wishlist = action.payload?.data || [];
         })
         .addCase(addToWishlist.fulfilled, (state, action) => {
-            state.wishlist.push(action.payload.data);
+            if (action.payload?.data) {
+                state.wishlist.push(action.payload.data);
+            }
         })
         .addCase(removeFromWishlist.fulfilled, (state, action) => {
-            state.wishlist = state.wishlist.filter(item => item.productId !== action.meta.arg.productId || item.variantId !== action.meta.arg.variantId);
+            state.wishlist = (state.wishlist || []).filter(item => item.productId !== action.meta.arg.productId || item.variantId !== action.meta.arg.variantId);
         })
 
         .addCase(getCategories.fulfilled, (state, action) => {
-            state.categories = action.payload.data;
+            state.categories = action.payload?.data || action.payload?.categories || [];
         })
         .addCase(applyCoupon.fulfilled, (state, action) => {
             state.coupon = action.payload;
